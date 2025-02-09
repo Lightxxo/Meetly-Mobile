@@ -1,22 +1,68 @@
 import { Dialect, Sequelize } from 'sequelize';
 import dotenv from 'dotenv';
-
+import UserModel from './User';
+import EventTypeModel from './EventType';
+import EventModel from './Event';
+import EventCommentModel from './EventComment';
+import EventAttendanceModel from './EventAttendance';
+import EventImageModel from './EventImage';
+import EventTypeOfEventModel from './EventTypeOfEvent';
 
 dotenv.config();
 
 const sequelize = new Sequelize({    
-  dialect: process.env.postgresql_dialect! as Dialect,
-  database: process.env.postgresql_database!,
-  username: process.env.postgresql_username!,
-  password: process.env.postgresql_password!,
-  host: process.env.postgresql_host!,
-  port: parseInt(process.env.postgresql_port!),
+  dialect: "postgres",
+  database: process.env.POSTGRESQL_DATABASE!,
+  username: process.env.POSTGRESQL_USER!,
+  password: process.env.POSTGRESQL_PASSWORD!,
+  host: process.env.POSTGRESQL_HOST!,
+  port: parseInt(process.env.POSTGRESQL_PORT!),
+  logging: false,
 });
 
+const db = {
+  sequelize,
+  User: UserModel(sequelize),
+  EventType: EventTypeModel(sequelize),
+  Event: EventModel(sequelize),
+  EventComment: EventCommentModel(sequelize),
+  EventAttendance: EventAttendanceModel(sequelize),
+  EventImage: EventImageModel(sequelize),
+  EventTypeOfEvent: EventTypeOfEventModel(sequelize),
+};
 
-// const db = {
-//   User: UserModel(sequelize),
-//   
-// };
 
-// export default db;
+db.User.hasMany(db.Event, { foreignKey: 'hostID', onDelete: 'CASCADE' });
+db.Event.belongsTo(db.User, { foreignKey: 'hostID', onDelete: 'CASCADE' });
+
+db.Event.hasMany(db.EventComment, { foreignKey: 'eventID', onDelete: 'CASCADE' });
+db.EventComment.belongsTo(db.Event, { foreignKey: 'eventID', onDelete: 'CASCADE' });
+
+db.User.hasMany(db.EventComment, { foreignKey: 'userID', onDelete: 'CASCADE' });
+db.EventComment.belongsTo(db.User, { foreignKey: 'userID', onDelete: 'CASCADE' });
+
+db.Event.hasMany(db.EventAttendance, { foreignKey: 'eventID', onDelete: 'CASCADE' });
+db.EventAttendance.belongsTo(db.Event, { foreignKey: 'eventID', onDelete: 'CASCADE' });
+
+db.User.hasMany(db.EventAttendance, { foreignKey: 'userID', onDelete: 'CASCADE' });
+db.EventAttendance.belongsTo(db.User, { foreignKey: 'userID', onDelete: 'CASCADE' });
+
+db.Event.hasMany(db.EventImage, { foreignKey: 'eventID', onDelete: 'CASCADE' });
+db.EventImage.belongsTo(db.Event, { foreignKey: 'eventID', onDelete: 'CASCADE' });
+
+db.Event.belongsToMany(db.EventType, { through: db.EventTypeOfEvent, foreignKey: 'eventID', onDelete: 'CASCADE' });
+db.EventType.belongsToMany(db.Event, { through: db.EventTypeOfEvent, foreignKey: 'eventTypeID', onDelete: 'CASCADE' });
+
+
+const syncDatabase = async () => {
+  try {
+    await sequelize.sync({ force: true });
+    console.log("Database synchronized successfully.");
+  } catch (error) {
+    console.error("Database synchronization failed:", error);
+  }
+};
+
+syncDatabase();
+
+export default db;
