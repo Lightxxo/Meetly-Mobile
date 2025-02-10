@@ -51,7 +51,7 @@ db.Event.hasMany(db.EventImage, { foreignKey: 'eventID', onDelete: 'CASCADE' });
 db.EventImage.belongsTo(db.Event, { foreignKey: 'eventID', onDelete: 'CASCADE' });
 
 db.Event.belongsToMany(db.EventType, { through: db.EventTypeOfEvent, foreignKey: 'eventID', onDelete: 'CASCADE' });
-db.EventType.belongsToMany(db.Event, { through: db.EventTypeOfEvent, foreignKey: 'eventTypeID', onDelete: 'CASCADE' });
+db.EventType.belongsToMany(db.Event, { through: db.EventTypeOfEvent, foreignKey: 'eventTypeID', onDelete: 'NO ACTION' });
 
 
 const syncDatabase = async () => {

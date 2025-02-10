@@ -12,7 +12,8 @@
   },
   "include": [
     "src/**/*.ts",
-    "server/**/*"                 
+    "server/**/*",
+    "./node_modules/react-tailwindcss-datepicker/dist/index.esm.{js,ts}",         
   ],
   "references": [
     { "path": "./tsconfig.app.json" },

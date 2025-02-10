@@ -21,15 +21,15 @@ export default (sequelize: Sequelize) => {
       },
       description: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: false,
       },
       thumbnail: {
         type: DataTypes.STRING(255),
-        allowNull: true,
+        allowNull: false,
       },
       location: {
         type: DataTypes.STRING(50),
-        allowNull: true,
+        allowNull: false,
       },
       eventDate: {
         type: DataTypes.DATE,

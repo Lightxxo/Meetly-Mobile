@@ -1,12 +1,15 @@
 import './App.css'
+import AppBody from './components/AppBody'
+import AppHeader from './components/AppHeader'
 
 function App() {
 
 
   return (
-      <h1 className="text-3xl font-bold underline">
-        Hello world!
-      </h1>
+    <div className='flex flex-col'>
+      <AppHeader></AppHeader>
+      <AppBody></AppBody>
+    </div>
 
   )
 }

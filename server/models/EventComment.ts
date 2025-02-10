@@ -20,7 +20,7 @@ export default (sequelize: Sequelize) => {
       },
       comment: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: false,
       },
     },
     {
