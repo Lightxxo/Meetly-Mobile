@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
     "target": "ESNext",
     "module": "CommonJS",
     "strict": true,
@@ -13,7 +14,7 @@
   "include": [
     "src/**/*.ts",
     "server/**/*",
-    "./node_modules/react-tailwindcss-datepicker/dist/index.esm.{js,ts}",         
+    "./node_modules/react-tailwindcss-datepicker/dist/index.esm.{js,ts}",    
   ],
   "references": [
     { "path": "./tsconfig.app.json" },
