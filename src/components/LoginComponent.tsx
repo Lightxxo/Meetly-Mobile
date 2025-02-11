@@ -1,13 +1,50 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
+import { UserContext } from "../contexts/Contexts";
 
 const Login = () => {
+  const userContext = useContext(UserContext);
+
+  if (!userContext) {
+    throw new Error("LoginLogoutButton must be used within a UserContext.Provider");
+  }
+
+  const { setUserData } = userContext;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const response = await fetch("http://localhost:3000/login", {
+      method: "POST",
+      headers: {
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify([{email: email, password: password }]),
+  });
+
+  const body = await response.json();
+
+  if(response.status === 201){
+      console.log("Logging in with", { email, password });
+      console.log("GOT FROM BACKEND body on /LOGIN", body)
+      let user = {token:body.token, userID:body.userID, username:body.username, email:body.email}
+      setUserData(user);
+      Cookies.set('user', JSON.stringify(user), { path: "/", sameSite: "Lax" });
+  } else if(response.status === 401){
+      alert('Please give valid login information!');
+      console.log( "Invalid Login Credentials",body);
+      return; 
+  }
+
+  navigate("/");
+
+
+
+
+
   };
 
   const handleSignup = () => {

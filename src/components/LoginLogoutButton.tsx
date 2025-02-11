@@ -1,27 +1,25 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import LogOutButton from "./LogoutButton";
 import LoginSignupButton from "./LoginSignupButton";
+import Cookies from "js-cookie";
+import { UserContext } from "../contexts/Contexts";
 
 export default function LoginLogoutButton() {
-  const [user, setUser] = useState(null);
+  const context = useContext(UserContext);
+
+  if (!context) {
+    throw new Error("LoginLogoutButton must be used within a UserContext.Provider");
+  }
+
+  const { userData, setUserData } = context;
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    const storedUser = Cookies.get("user");
     if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        if (parsedUser.token && parsedUser.userId) {
-          setUser(parsedUser);
-        } else {
-          localStorage.removeItem("user");
-          setUser(null);
-        }
-      } catch {
-        localStorage.removeItem("user");
-        setUser(null);
-      }
+      const processedUser = JSON.parse(storedUser)
+      setUserData({...processedUser});
     }
   }, []);
 
-  return <>{user ? <LogOutButton></LogOutButton> : <LoginSignupButton></LoginSignupButton>}</>;
+  return <>{userData.token ? <LogOutButton setUserData={setUserData} /> : <LoginSignupButton />}</>;
 }

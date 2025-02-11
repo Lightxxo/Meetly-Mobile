@@ -1,7 +1,17 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Cookies from 'js-cookie';
+import { UserContext } from "../contexts/Contexts";
 
 const Signup = () => {
+  
+  const userContext = useContext(UserContext);
+
+  if (!userContext) {
+    throw new Error("LoginLogoutButton must be used within a UserContext.Provider");
+  }
+
+  const { setUserData } = userContext;
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,10 +40,12 @@ const Signup = () => {
     
     if(response.status === 201){
         console.log("Signing up with", { username, email, password });
-        
-        let user = {token:'###', userID:body.user.userID}
-        localStorage.setItem('user', JSON.stringify(user));
+        console.log("GOT FROM BACKEND body", body)
+        const user = {token:body.token, userID:body.userID, username:body.username, email:body.email}
+        setUserData(user);
+        Cookies.set('user', JSON.stringify(user), { path: "/", sameSite: "Lax" });
     } else if(response.status === 409){
+        alert('Credentials are in use!')
         console.log( "Credentials Already Exists",body);
         return; 
     }

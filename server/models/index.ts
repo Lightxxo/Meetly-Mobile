@@ -1,4 +1,4 @@
-import { Dialect, Sequelize } from 'sequelize';
+import { Sequelize } from 'sequelize';
 import dotenv from 'dotenv';
 import UserModel from './User';
 import EventTypeModel from './EventType';

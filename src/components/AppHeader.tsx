@@ -2,24 +2,34 @@ import { JSX } from "react";
 import SearchBar from "./Searchbar";
 import { useNavigate } from "react-router-dom";
 import LoginLogoutButton from "./LoginLogoutButton";
-
+import Cookies from "js-cookie";
+import CreateEventButton from "./CreateEventButton";
 
 export default function AppHeader(): JSX.Element {
   return (
-    <div>
-      <div className="hidden lg:block">
-        <LargeScreenLayout />
+    <>
+      <div>
+        <div className="hidden lg:block">
+          <LargeScreenLayout />
+        </div>
+        <div className="lg:hidden">
+          <SmallScreenLayout />
+        </div>
+        <div className="p-10 text-center">
+          {Cookies.get("user") ? <p> {Cookies.get("user")}</p> : <p>NO USER</p>}
+        </div>
       </div>
-      <div className="lg:hidden">
-        <SmallScreenLayout />
+
+      <div className="mx-auto">
+        <CreateEventButton></CreateEventButton>
       </div>
-    </div>
+    </>
   );
 }
 
 const useHomeNavigation = () => {
   const navigate = useNavigate();
-  return () => navigate('/');
+  return () => navigate("/");
 };
 
 const LargeScreenLayout = () => {
@@ -35,9 +45,6 @@ const LargeScreenLayout = () => {
       </div>
       <div>
         <LoginLogoutButton></LoginLogoutButton>
-      </div>
-      <div>
-        { localStorage.getItem('user')? <p> {JSON.parse(localStorage.getItem('user') as string).userID}</p> : <p>NO USER</p>}
       </div>
     </div>
   );
@@ -58,9 +65,6 @@ const SmallScreenLayout = () => {
       </div>
       <div className="flex justify-center">
         <SearchBar />
-      </div>
-      <div>
-        { localStorage.getItem('user')? <p> {localStorage.getItem('user')}</p> : <p>NO USER</p>}
       </div>
     </div>
   );
