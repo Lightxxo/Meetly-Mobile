@@ -1,5 +1,5 @@
 import Cookies from "js-cookie";
-import { UserDataType } from "../types/search";
+import { UserDataType } from "../types/types";
 
 
 interface LogoutButtonProps {

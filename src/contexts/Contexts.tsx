@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { SearchDataType, UserDataType } from "../types/search";
+import { SearchDataType, UserDataType } from "../types/types";
 
 export type SearchContextType = {
   searchData: SearchDataType;
