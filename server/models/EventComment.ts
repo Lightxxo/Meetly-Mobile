@@ -5,13 +5,25 @@ export default (sequelize: Sequelize) => {
 
   EventComment.init(
     {
+      commentID: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        allowNull:false,
+        primaryKey:true
+      },
       eventID: {
         type: DataTypes.UUID,
         allowNull: false,
+
+      },
+      username:{
+        type: DataTypes.STRING(50),
+        allowNull:false
       },
       userID: {
         type: DataTypes.UUID,
         allowNull: false,
+
       },
       rating: {
         type: DataTypes.DECIMAL(2, 1),
@@ -20,7 +32,7 @@ export default (sequelize: Sequelize) => {
       },
       comment: {
         type: DataTypes.TEXT,
-        allowNull: false,
+        allowNull: false, 
       },
     },
     {
@@ -30,6 +42,5 @@ export default (sequelize: Sequelize) => {
     }
   );
 
-  EventComment.removeAttribute('id');
   return EventComment;
 };

@@ -44,7 +44,7 @@ function App() {
           {/* Conditionally render AppHeader */}
           {location.pathname === "/" ||
           location.pathname === "/search" ||
-          location.pathname.startsWith("/event/") ? (
+          location.pathname.startsWith('/event')? (
             <AppHeader />
           ) : (
             <></>

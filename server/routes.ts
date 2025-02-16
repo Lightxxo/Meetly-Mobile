@@ -15,6 +15,9 @@ router.post("/create-event", authMiddleware, upload.array("images", 10), control
 router.get('/events', controller.getPaginatedEvents);
 router.get('/event/:eventID', controller.getEventDetails);
 router.get('/rsvp-status', authMiddleware, controller.getUserRSVPStatus)
-
+router.post('/rsvp-status', authMiddleware, controller.postUserRSVPStatus)
+router.post('/event-comment', authMiddleware, controller.postComment)
+router.delete('/delete-comment', authMiddleware, controller.deleteComment)
+router.put('/update-comment', authMiddleware, controller.updateComment)
 
 export default router;  

@@ -8,10 +8,12 @@ export default (sequelize: Sequelize) => {
       eventID: {
         type: DataTypes.UUID,
         allowNull: false,
+        primaryKey: true,
       },
       userID: {
         type: DataTypes.UUID,
         allowNull: false,
+        primaryKey: true,
       },
       status: {
         type: DataTypes.ENUM('Going', 'Interested', 'Not Going'),

@@ -7,7 +7,6 @@ import { hashPassword, comparePassword } from "./utils/hashing";
 import jwt from "jsonwebtoken";
 import path from "path";
 
-
 dotenv.config();
 
 const controller: ControllerType = {};
@@ -79,7 +78,9 @@ controller.loginController = async (req: Request, res: Response) => {
 
     if (user.length) {
       console.log(
-        `Login request received, DB replied with user: ${user[0].dataValues.userID} OF TYPE: ${typeof user}`
+        `Login request received, DB replied with user: ${
+          user[0].dataValues.userID
+        } OF TYPE: ${typeof user}`
       );
       const isValidPassword = await comparePassword(
         password,
@@ -112,25 +113,19 @@ controller.loginController = async (req: Request, res: Response) => {
   }
 };
 
-
-
 controller.userTokenVerifyController = async (req: Request, res: Response) => {
-  
+  const tok = req.headers["token"] as string;
 
-
-  const tok = req.headers['token'] as string;
-  
   // if (!tok || !tok.startsWith('Bearer ')) {
   //   return res.status(400).json({ error: "Token not provided or invalid format" });
   // }
 
-  const token = tok.split(' ')[1];
-  
+  const token = tok.split(" ")[1];
 
   try {
     jwt.verify(token, JWT_SECRET!);
     const decoded = jwt.decode(token);
-    
+
     if (decoded && typeof decoded !== "string") {
       const user = await db.User.findAll({
         where: {
@@ -138,26 +133,35 @@ controller.userTokenVerifyController = async (req: Request, res: Response) => {
         },
       });
       if (user && decoded.id === user[0].dataValues.userID) {
-        res.status(201).json({ validator: true });  
-        return;  
+        res.status(201).json({ validator: true });
+        return;
       } else {
-        res.status(401).json({ error: "Decoded User not matching User ID IN DB OR USER NOT FOUND" });
-        
-        return; 
+        res
+          .status(401)
+          .json({
+            error: "Decoded User not matching User ID IN DB OR USER NOT FOUND",
+          });
+
+        return;
       }
     } else {
       console.log("Invalid token");
       res.status(402).json({ error: "Invalid Token" });
-      return;  
+      return;
     }
   } catch (e: any) {
     console.log(`Encountered error on USER TOKEN VERIFY API: ${e.message}`);
-    res.status(403).json({ error: "Unauthorized or expired token", message: e.message });
-    return;  
+    res
+      .status(403)
+      .json({ error: "Unauthorized or expired token", message: e.message });
+    return;
   }
 };
 
-controller.createEventController = async (req: any, res: Response): Promise<void> => {
+controller.createEventController = async (
+  req: any,
+  res: Response
+): Promise<void> => {
   try {
     console.log("----- createEventController invoked -----");
 
@@ -165,7 +169,14 @@ controller.createEventController = async (req: any, res: Response): Promise<void
     const user = req.user; // Authenticated user from authMiddleware
 
     /** Extract Fields from Body & Files */
-    const { eventTitle, description, location, eventDate, thumbnailIndex, eventTypes } = req.body;
+    const {
+      eventTitle,
+      description,
+      location,
+      eventDate,
+      thumbnailIndex,
+      eventTypes,
+    } = req.body;
     const files: any = req.files;
     console.log("Request body:", req.body);
     console.log("Files received:", files);
@@ -176,14 +187,19 @@ controller.createEventController = async (req: any, res: Response): Promise<void
     if (!description) errors.push("Description is required.");
     if (!location) errors.push("Location is required.");
     if (!eventDate) errors.push("Event date is required.");
-    
+
     let eventTypesArr: any;
     try {
-      eventTypesArr = typeof eventTypes === "string" ? JSON.parse(eventTypes) : eventTypes;
+      eventTypesArr =
+        typeof eventTypes === "string" ? JSON.parse(eventTypes) : eventTypes;
     } catch (e) {
       errors.push("Invalid format for event types.");
     }
-    if (!eventTypesArr || !Array.isArray(eventTypesArr) || eventTypesArr.length === 0) {
+    if (
+      !eventTypesArr ||
+      !Array.isArray(eventTypesArr) ||
+      eventTypesArr.length === 0
+    ) {
       errors.push("At least one event type is required.");
     }
     if (!files || files.length === 0) {
@@ -203,7 +219,9 @@ controller.createEventController = async (req: any, res: Response): Promise<void
     }
 
     /** Generate Full Image URLs */
-    const imageUrls = files.map((file: any) => `${BASE_URL}/uploads/events/${file.filename}`);
+    const imageUrls = files.map(
+      (file: any) => `${BASE_URL}/uploads/events/${file.filename}`
+    );
 
     /** Create the Event */
     const newEvent: any = await db.Event.create({
@@ -236,7 +254,9 @@ controller.createEventController = async (req: any, res: Response): Promise<void
       }
       eventTypesData.push({ eventID, eventTypeID: eventType.eventTypeID });
     }
-    const eventTypesResult = await db.EventTypeOfEvent.bulkCreate(eventTypesData);
+    const eventTypesResult = await db.EventTypeOfEvent.bulkCreate(
+      eventTypesData
+    );
 
     /** Add Host as Attendee */
     const attendeeResult = await db.EventAttendance.create({
@@ -246,15 +266,22 @@ controller.createEventController = async (req: any, res: Response): Promise<void
     });
 
     /** Return Success Response */
-    res.status(201).json({ event: newEvent, message: "Event created successfully!" });
+    res
+      .status(201)
+      .json({ event: newEvent, message: "Event created successfully!" });
     console.log("----- createEventController completed successfully -----");
   } catch (error: any) {
     console.error("Error in createEventController:", error);
-    res.status(500).json({ error: "Internal server error", message: error.message });
+    res
+      .status(500)
+      .json({ error: "Internal server error", message: error.message });
   }
 };
 
-controller.getPaginatedEvents = async (req: Request, res: Response): Promise<void> => {
+controller.getPaginatedEvents = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     console.log("----- getPaginatedEvents invoked -----");
 
@@ -272,51 +299,36 @@ controller.getPaginatedEvents = async (req: Request, res: Response): Promise<voi
     // total count of events for frontend pagination
     const totalEvents = await db.Event.count();
 
-    console.log(`Events retrieved: ${events.length}, Offset: ${offset}, Total: ${totalEvents}`);
+    console.log(
+      `Events retrieved: ${events.length}, Offset: ${offset}, Total: ${totalEvents}`
+    );
 
     res.status(200).json({
       events,
-      totalEvents, 
-      hasMore: offset + events.length < totalEvents, 
+      totalEvents,
+      hasMore: offset + events.length < totalEvents,
     });
   } catch (error: any) {
     console.error("Error in getPaginatedEvents:", error);
-    res.status(500).json({ error: "Internal server error", message: error.message });
+    res
+      .status(500)
+      .json({ error: "Internal server error", message: error.message });
   }
 };
 
-controller.getEventDetails = async (req: Request, res: Response): Promise<void> => {
+
+const fetchEventDetails = async (eventID: string) => {
   try {
-    console.log("----- getEventDetails invoked -----");
-
-    // 1. Get eventID from URL params
-    const { eventID } = req.params;
-    // console.log("Event ID from params:", eventID);
-    if (!eventID) {
-      console.error("Event ID is missing.");
-      res.status(400).json({ error: "Event ID is required" });
-      return;
-    }
-
-    // 2. Fetch event details from the Events table.
     const event = await db.Event.findOne({ where: { eventID } });
     if (!event) {
-      console.error("No event found for ID:", eventID);
-      res.status(404).json({ error: "Event not found" });
-      return;
+      throw new Error("Event not found");
     }
-    // console.log("Fetched event details:", event.dataValues);
 
-    
-    const hostID = event.dataValues.hostID
+    const hostID = event.dataValues.hostID;
     const host = await db.User.findOne({ where: { userID: hostID } });
 
-
-    // 3. Fetch all event images from the EventImages table.
     const images = await db.EventImage.findAll({ where: { eventID } });
-    // console.log("Fetched event images:", images.map((img: any) => img.dataValues));
 
-    // 4. Fetch attendees with status "Going" including basic user details.
     const attendees = await db.EventAttendance.findAll({
       where: { eventID, status: "Going" },
       include: [
@@ -326,44 +338,66 @@ controller.getEventDetails = async (req: Request, res: Response): Promise<void> 
         },
       ],
     });
-    // console.log("Fetched attendees (Going):", attendees.map((att: any) => att.dataValues));
 
-    // 5. Count how many people are "Going" and "Interested".
-    const goingCount = await db.EventAttendance.count({ where: { eventID, status: "Going" } });
-    const interestedCount = await db.EventAttendance.count({ where: { eventID, status: "Interested" } });
-    // console.log("Going count:", goingCount);
-    // console.log("Interested count:", interestedCount);
+    const goingCount = await db.EventAttendance.count({
+      where: { eventID, status: "Going" },
+    });
 
-    // 6. Comments placeholder (for now, an empty array)
-    const comments: any[] = [];
-    // console.log("Comments placeholder:", comments);
+    const interestedCount = await db.EventAttendance.count({
+      where: { eventID, status: "Interested" },
+    });
 
-    // 7. Return the consolidated response.
-    res.status(200).json({
+    const comments = await db.EventComment.findAll({ where: { eventID } });
+
+    return {
       event,
       images,
       attendees,
       goingCount,
       interestedCount,
       comments,
-      host
-    });
+      host,
+    };
+  } catch (error:any) {
+    throw new Error(`Error fetching event details: ${error.message}`);
+  }
+};
+
+controller.getEventDetails = async (req: Request, res: Response): Promise<void> => {
+  try {
+    console.log("----- getEventDetails invoked -----");
+
+    const { eventID } = req.params;
+
+    if (!eventID) {
+      console.error("Event ID is missing.");
+      res.status(400).json({ error: "Event ID is required" });
+      return;
+    }
+
+    // Fetch event details
+    const eventDetails = await fetchEventDetails(eventID);
+
+    // Return the consolidated response
+    res.status(200).json(eventDetails);
+
     console.log("----- getEventDetails completed successfully -----");
   } catch (error: any) {
     console.error("Error fetching event details:", error);
-    res.status(500).json({ error: "Internal server error", message: error.message });
+    res
+      .status(500)
+      .json({ error: "Internal server error", message: error.message });
   }
 };
 
 controller.getUserRSVPStatus = async (req: any, res: Response) => {
-
   const userID = req.query.userID as string;
   const eventID = req.query.eventID as string;
   console.log(userID, eventID);
 
   try {
     // Find the event attendance record for the given user and event
-    const eventAttendance:any = await db.EventAttendance.findOne({
+    const eventAttendance: any = await db.EventAttendance.findOne({
       where: {
         eventID: eventID,
         userID: userID,
@@ -372,29 +406,156 @@ controller.getUserRSVPStatus = async (req: any, res: Response) => {
 
     if (!eventAttendance) {
       res.status(404).json({
-        message: 'RSVP status not found for this user and event.',
+        message: "RSVP status not found for this user and event.",
       });
       return;
     }
 
-    
     res.status(200).json({
       userID: eventAttendance.userID,
       eventID: eventAttendance.eventID,
       status: eventAttendance.status, // Going, Interested, Not Going
     });
     return;
-  } catch (error:any) {
-    console.error('Error fetching RSVP status:', error);
+  } catch (error: any) {
+    console.error("Error fetching RSVP status:", error);
     res.status(500).json({
-      message: 'Error fetching RSVP status.',
+      message: "Error fetching RSVP status.",
       error: error.message,
     });
     return;
   }
 };
 
+function toTitleCase(str: string): string {
+  return str
+    .toLowerCase() 
+    .split(" ") 
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1)) 
+    .join(" "); 
+}
+controller.postUserRSVPStatus = async (req: any, res: Response) => {
+  try {
+    const { userID, eventID, status } = req.body;
+
+    // Update or create RSVP record
+    const attendance: any = await db.EventAttendance.findOne({
+      where: { userID, eventID },
+    });
+
+    if (!attendance) {
+      await db.EventAttendance.create({
+        userID,
+        eventID,
+        status: toTitleCase(status),
+      });
+    } else {
+      await db.EventAttendance.update(
+        { status: toTitleCase(status) },
+        { where: { userID, eventID } }
+      );
+    }
+
+    // Fetch updated event details
+    const eventDetails = await fetchEventDetails(eventID);
+
+    // Return updated event details
+    res.status(200).json(eventDetails);
+
+  } catch (error: any) {
+    console.error("Error updating RSVP status:", error);
+    res
+      .status(500)
+      .json({ error: "Internal server error", message: error.message });
+  }
+};
+
+controller.postComment = async(req:any, res:Response)=>{
+
+  try{
+    const { userID, eventID, username, comment, rating } = req.body;
+   
+    const newComment = await db.EventComment.create({
+      userID,
+      eventID,
+      username,
+      comment: comment,
+      rating
+    });
+
+    res.status(200).json(newComment);
+
+  } catch(error:any){
+    res.status(500).json({ error: "Internal server error", message: error.message });
+    console.log(`"Internal server error", ${error.message}`)
+  }
+}
+
+controller.deleteComment = async (req: any, res: Response) => {
+  try {
+    // Extract data from the request body
+    const { userID, eventID, commentID } = req.body;
+
+    // Check if the comment exists for the given userID, eventID, and commentID
+    const comment = await db.EventComment.findOne({
+      where: {
+        userID: userID,
+        eventID: eventID,
+        commentID: commentID,
+      },
+    });
+
+    if (!comment) {
+      res.status(404).json({ message: 'Comment not found' });
+      return 
+    }
+
+    // Delete the comment
+    await comment.destroy();
+
+    // Respond with a success message
+    res.status(200).json({ message: 'Comment deleted successfully' });
+    return 
+  } catch (error:any) {
+    console.error('Error deleting comment:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+    return 
+  }
+};
+
+controller.updateComment = async (req: any, res: Response) => {
+  try {
+    // Extract data from the request body
+    const { userID, eventID, commentID, comment } = req.body;
+
+    // Check if the comment exists for the given userID, eventID, and commentID
+    const oldComment:any = await db.EventComment.findOne({
+      where: {
+        userID: userID,
+        eventID: eventID,
+        commentID: commentID,
+      },
+    });
+
+    if (!oldComment) {
+      res.status(404).json({ message: 'Comment not found' });
+      return;
+    }
+
+    // Update the comment content
+    oldComment.comment = comment;
+    await oldComment.save();
+
+    // Respond with a success message
+    res.status(200).json({ message: 'Comment updated successfully', oldComment });
+    return;
+  } catch (error: any) {
+    console.error('Error updating comment:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+    return;
+  }
+};
+
+
+
 export default controller;
-
-
-

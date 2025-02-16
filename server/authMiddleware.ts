@@ -17,6 +17,7 @@ const authMiddleware = async (req: any, res: Response, next: NextFunction): Prom
 
     /** 2️⃣ Extract Token */
     const token = authHeader.split(" ")[1];
+
     let processedToken;
     try {
       processedToken = JSON.parse(token);
