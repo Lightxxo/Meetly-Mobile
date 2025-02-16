@@ -1,7 +1,8 @@
 
 import { Router } from 'express';
 import controller from './controllers';
-
+import upload from './multerconfig';
+import authMiddleware from './authMiddleware';
 
 const router = Router();
 
@@ -10,5 +11,10 @@ router.get('/test-server-up', controller.testServerUpController);
 router.post('/signup', controller.signupController);
 router.post('/login', controller.loginController);
 router.post('/user-token-verify', controller.userTokenVerifyController);
+router.post("/create-event", authMiddleware, upload.array("images", 10), controller.createEventController);
+router.get('/events', controller.getPaginatedEvents);
+router.get('/event/:eventID', controller.getEventDetails);
+router.get('/rsvp-status', authMiddleware, controller.getUserRSVPStatus)
+
 
 export default router;  

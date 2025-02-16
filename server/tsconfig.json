@@ -14,11 +14,15 @@
     "resolveJsonModule": true
   },
   "include": [
-    "**/*.ts",           // Include all ts files inside the server directory and subdirectories
-    "**/*.js"            // Include all js files inside the server directory and subdirectories
-, "models/index.ts"  ],
+    "**/*.ts",
+    "**/*.js",
+    "**/*.d.ts",
+    "types/**/*.d.ts", 
+    "models/index.ts",
+
+  ],
   "exclude": [
-    "node_modules", 
+    "node_modules",
     "dist"
   ]
 }

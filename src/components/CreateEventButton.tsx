@@ -24,16 +24,14 @@ export default function CreateEventButton() {
                 'Content-Type': 'application/json',
                 'Token': `Bearer ${userData.token}` 
               },
-            body: JSON.stringify({token: userData.token, userID:userData.userID}),
         });
 
         
-        console.log(response.status)
+        
         if(response.status === 201){
             //success
-            toast('Verified')
             navigate('/create-event');
-        } else if (response.status === 401){
+        } else if (response.status === 401 || response.status === 402 || response.status === 403){
             //unauth/exp
             
             Cookies.remove("user"); 

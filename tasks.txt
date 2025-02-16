@@ -1,0 +1,17 @@
+Complete GOING Interested Not Going
+Implement comments
+    write comment
+    delete comment
+Implement User Section
+    My Events
+        edit event
+            delete event
+    Going Events
+    Interested Events
+Implement Event Search
+    filter by type
+    search by eventTitle
+    search by location
+UI OverHaul
+Push Dummy Data Script
+Implement elasticSearch

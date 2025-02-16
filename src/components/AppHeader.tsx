@@ -2,8 +2,7 @@ import { JSX } from "react";
 import SearchBar from "./Searchbar";
 import { useNavigate } from "react-router-dom";
 import LoginLogoutButton from "./LoginLogoutButton";
-import Cookies from "js-cookie";
-import CreateEventButton from "./CreateEventButton";
+
 
 export default function AppHeader(): JSX.Element {
   return (
@@ -15,14 +14,10 @@ export default function AppHeader(): JSX.Element {
         <div className="lg:hidden">
           <SmallScreenLayout />
         </div>
-        <div className="p-10 text-center">
-          {Cookies.get("user") ? <p> {Cookies.get("user")}</p> : <p>NO USER</p>}
-        </div>
+
       </div>
 
-      <div className="mx-auto">
-        <CreateEventButton></CreateEventButton>
-      </div>
+
     </>
   );
 }
@@ -37,8 +32,9 @@ const LargeScreenLayout = () => {
   return (
     <div className="flex justify-between items-center p-5">
       <div className="flex space-x-3" onClick={handleHomeClick}>
-        <p className="px-5">LOGO</p>
-        <p>MEETLY</p>
+        <div className="w-24 h-24 rounded-full bg-gray-900 text-white flex items-center justify-center text-xl font-bold cursor-pointer ms-5 mx-auto">
+          MEETLY
+        </div>
       </div>
       <div className="flex-grow flex justify-center">
         <SearchBar />
@@ -55,15 +51,16 @@ const SmallScreenLayout = () => {
   return (
     <div className="p-5">
       <div className="flex justify-between items-center mb-4">
-        <div className="flex space-x-3" onClick={handleHomeClick}>
-          <p className="px-5">LOGO</p>
-          <p>MEETLY</p>
+        <div className="flex space-x-3 " onClick={handleHomeClick}>
+          <div className="w-24 h-24 rounded-full bg-gray-900 text-white flex items-center justify-center text-xl font-bold cursor-pointer mx-auto ms-5">
+            MEETLY
+          </div>
         </div>
         <div>
           <LoginLogoutButton></LoginLogoutButton>
         </div>
       </div>
-      <div className="flex justify-center">
+      <div className="flex justify-center mt-20">
         <SearchBar />
       </div>
     </div>

@@ -1,0 +1,313 @@
+import { DataTypes, Model, Sequelize } from 'sequelize';
+
+export default (sequelize: Sequelize) => {
+  class Event extends Model {}
+
+  Event.init(
+    {
+      eventID: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      hostID: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
+      eventTitle: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+        unique: true,
+      },
+      description: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
+      thumbnail: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+      },
+      location: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+      },
+      eventDate: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+    },
+    {
+      sequelize,
+      tableName: 'Events',
+      timestamps: true,
+    }
+  );
+
+  return Event;
+};
+
+import { DataTypes, Model, Sequelize } from 'sequelize';
+
+export default (sequelize: Sequelize) => {
+  class EventAttendance extends Model {}
+
+  EventAttendance.init(
+    {
+      eventID: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
+      userID: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
+      status: {
+        type: DataTypes.ENUM('Going', 'Interested', 'Not Going'),
+        allowNull: false,
+      },
+    },
+    {
+      sequelize,
+      tableName: 'EventAttendance',
+      timestamps: false,
+    }
+  );
+  EventAttendance.removeAttribute('id');
+  return EventAttendance;
+};
+import { DataTypes, Model, Sequelize } from 'sequelize';
+
+export default (sequelize: Sequelize) => {
+  class EventComment extends Model {}
+
+  EventComment.init(
+    {
+      eventID: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
+      userID: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
+      rating: {
+        type: DataTypes.DECIMAL(2, 1),
+        allowNull: false,
+        validate: { min: 1.0, max: 5.0 },
+      },
+      comment: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
+    },
+    {
+      sequelize,
+      tableName: 'EventComments',
+      timestamps: false,
+    }
+  );
+
+  EventComment.removeAttribute('id');
+  return EventComment;
+};
+
+import { DataTypes, Model, Sequelize } from 'sequelize';
+
+export default (sequelize: Sequelize) => {
+  class EventImage extends Model {}
+
+  EventImage.init(
+    {
+      eventID: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
+      image: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+      },
+    },
+    {
+      
+      sequelize,
+      tableName: 'EventImages',
+      timestamps: false,
+    }
+  );
+
+  EventImage.removeAttribute('id');
+
+  return EventImage;
+};
+
+import { DataTypes, Model, Sequelize } from 'sequelize';
+
+export default (sequelize: Sequelize) => {
+  class EventType extends Model {}
+
+  EventType.init(
+    {
+      eventTypeID: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      eventType: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+        unique: true,
+      },
+    },
+    {
+      sequelize,
+      tableName: 'EventType',
+      timestamps: false,
+    }
+  );
+
+  return EventType;
+};
+
+import { DataTypes, Model, Sequelize } from 'sequelize';
+
+export default (sequelize: Sequelize) => {
+  class EventTypeOfEvent extends Model {}
+
+  EventTypeOfEvent.init(
+    {
+      eventTypeID: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
+      eventID: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
+    },
+    {
+      sequelize,
+      tableName: 'EventTypeOfEvents',
+      timestamps: false,
+    }
+  );
+
+  EventTypeOfEvent.removeAttribute('id');
+  return EventTypeOfEvent;
+};
+
+import { DataTypes, Model, Sequelize } from 'sequelize';
+
+export default (sequelize: Sequelize) => {
+  class User extends Model {}
+
+  User.init(
+    {
+      userID: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      username: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+        unique: true,
+      },
+      email: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+        unique: true,
+      },
+      password: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+      },
+    },
+    {
+      sequelize,
+      tableName: 'Users',
+      timestamps: false,
+    }
+  );
+
+  return User;
+};
+
+import { Sequelize } from 'sequelize';
+import dotenv from 'dotenv';
+import UserModel from './User';
+import EventTypeModel from './EventType';
+import EventModel from './Event';
+import EventCommentModel from './EventComment';
+import EventAttendanceModel from './EventAttendance';
+import EventImageModel from './EventImage';
+import EventTypeOfEventModel from './EventTypeOfEvent';
+
+dotenv.config();
+
+const sequelize = new Sequelize({    
+  dialect: "postgres",
+  database: process.env.POSTGRESQL_DATABASE!,
+  username: process.env.POSTGRESQL_USER!,
+  password: process.env.POSTGRESQL_PASSWORD!,
+  host: process.env.POSTGRESQL_HOST!,
+  port: parseInt(process.env.POSTGRESQL_PORT!),
+  logging: false,
+});
+
+const db = {
+  sequelize,
+  User: UserModel(sequelize),
+  EventType: EventTypeModel(sequelize),
+  Event: EventModel(sequelize),
+  EventComment: EventCommentModel(sequelize),
+  EventAttendance: EventAttendanceModel(sequelize),
+  EventImage: EventImageModel(sequelize),
+  EventTypeOfEvent: EventTypeOfEventModel(sequelize),
+};
+
+
+db.User.hasMany(db.Event, { foreignKey: 'hostID', onDelete: 'CASCADE' });
+db.Event.belongsTo(db.User, { foreignKey: 'hostID', onDelete: 'CASCADE' });
+
+db.Event.hasMany(db.EventComment, { foreignKey: 'eventID', onDelete: 'CASCADE' });
+db.EventComment.belongsTo(db.Event, { foreignKey: 'eventID', onDelete: 'CASCADE' });
+
+db.User.hasMany(db.EventComment, { foreignKey: 'userID', onDelete: 'CASCADE' });
+db.EventComment.belongsTo(db.User, { foreignKey: 'userID', onDelete: 'CASCADE' });
+
+db.Event.hasMany(db.EventAttendance, { foreignKey: 'eventID', onDelete: 'CASCADE' });
+db.EventAttendance.belongsTo(db.Event, { foreignKey: 'eventID', onDelete: 'CASCADE' });
+
+db.User.hasMany(db.EventAttendance, { foreignKey: 'userID', onDelete: 'CASCADE' });
+db.EventAttendance.belongsTo(db.User, { foreignKey: 'userID', onDelete: 'CASCADE' });
+
+db.Event.hasMany(db.EventImage, { foreignKey: 'eventID', onDelete: 'CASCADE' });
+db.EventImage.belongsTo(db.Event, { foreignKey: 'eventID', onDelete: 'CASCADE' });
+
+db.Event.belongsToMany(db.EventType, { through: db.EventTypeOfEvent, foreignKey: 'eventID', onDelete: 'CASCADE' });
+db.EventType.belongsToMany(db.Event, { through: db.EventTypeOfEvent, foreignKey: 'eventTypeID', onDelete: 'NO ACTION' });
+
+
+const syncDatabase = async () => {
+  try {
+    await sequelize.sync({ force: true });
+    console.log("Database synchronized successfully.");
+  } catch (error) {
+    console.error("Database synchronization failed:", error);
+  }
+};
+
+syncDatabase();
+
+export default db;
+
+
+

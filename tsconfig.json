@@ -14,7 +14,7 @@
   "include": [
     "src/**/*.ts",
     "server/**/*",
-    "./node_modules/react-tailwindcss-datepicker/dist/index.esm.{js,ts}",    
+    "./node_modules/react-tailwindcss-datepicker/dist/index.esm.{js,ts}", "src/components/HomeEventListSection.tsx",    
   ],
   "references": [
     { "path": "./tsconfig.app.json" },
