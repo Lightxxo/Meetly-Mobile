@@ -1,11 +1,4 @@
-import React, {
-  useState,
-  ChangeEvent,
-  FormEvent,
-  useEffect,
-  KeyboardEvent,
-} from "react";
-
+import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import Cookies from "js-cookie";
 
 type FilePreview = {
@@ -14,38 +7,38 @@ type FilePreview = {
 };
 
 const CreateEventForm: React.FC = () => {
-  // Event form state
   const [eventTitle, setEventTitle] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
   const [eventDate, setEventDate] = useState("");
-
-  // Picture upload & thumbnail selection state
   const [filePreviews, setFilePreviews] = useState<FilePreview[]>([]);
   const [thumbnailIndex, setThumbnailIndex] = useState(0);
-
-  // Event types state (for tags)
   const [eventTypes, setEventTypes] = useState<string[]>([]);
   const [eventTypeInput, setEventTypeInput] = useState("");
 
-  // Handle file input changes (now appending files instead of replacing)
+  // Handle file input changes (appending files)
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles: FilePreview[] = Array.from(e.target.files).map((file) => ({
         file,
         preview: URL.createObjectURL(file),
       }));
+
       setFilePreviews((prev) => {
         const updatedFiles = [...prev, ...newFiles];
+
         if (prev.length === 0 && updatedFiles.length > 0) {
-          setThumbnailIndex(0); // Set thumbnail to the first file if none exist yet
+          setThumbnailIndex(0);
         }
+
         return updatedFiles;
       });
+
+      // Clear file input value to prevent re-uploading the same file
+      e.target.value = "";
     }
   };
 
-  // Clean up object URLs to avoid memory leaks
   useEffect(() => {
     return () => {
       filePreviews.forEach((fileObj) => URL.revokeObjectURL(fileObj.preview));
@@ -57,22 +50,12 @@ const CreateEventForm: React.FC = () => {
     setThumbnailIndex(index);
   };
 
-  // Remove an image from the filePreviews array
-  const handleRemoveImage = (index: number) => {
-    setFilePreviews((prev) => prev.filter((_, i) => i !== index));
-    setThumbnailIndex((prevThumbnailIndex) => {
-      if (index === prevThumbnailIndex) {
-        // If the current thumbnail is removed, set thumbnail to the first image if available
-        return 0;
-      } else if (index < prevThumbnailIndex) {
-        // Adjust the thumbnail index if a preceding image is removed
-        return prevThumbnailIndex - 1;
-      }
-      return prevThumbnailIndex;
-    });
+  // Clear all images, reset thumbnail, and cleanup preview URLs
+  const handleClearImages = () => {
+    setFilePreviews([]);
+    setThumbnailIndex(0);
   };
 
-  // Add an event type (as a tag)
   const handleAddEventType = () => {
     const trimmedType = eventTypeInput.trim();
     if (trimmedType !== "" && !eventTypes.includes(trimmedType)) {
@@ -81,15 +64,13 @@ const CreateEventForm: React.FC = () => {
     }
   };
 
-  // Allow adding event types on Enter key press
-  const handleEventTypeKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+  const handleEventTypeKeyDown = (e: any) => {
     if (e.key === "Enter") {
       e.preventDefault();
       handleAddEventType();
     }
   };
 
-  // Remove an event type from the list
   const handleRemoveEventType = (typeToRemove: string) => {
     setEventTypes(eventTypes.filter((type) => type !== typeToRemove));
   };
@@ -107,32 +88,26 @@ const CreateEventForm: React.FC = () => {
       return;
     }
 
-    // Get JWT token from cookies
-    const token = Cookies.get("user"); // Assuming the JWT is stored under 'user'
+    const token = Cookies.get("user");
 
-    // Build a FormData object for text and files
     const formData = new FormData();
     formData.append("eventTitle", eventTitle);
     formData.append("description", description);
     formData.append("location", location);
     formData.append("eventDate", eventDate);
 
-    // Append each image file
     filePreviews.forEach((fileObj) => {
       formData.append("images", fileObj.file);
     });
 
-    // Append the thumbnail index
     formData.append("thumbnailIndex", thumbnailIndex.toString());
-
-    // Append event types
     formData.append("eventTypes", JSON.stringify(eventTypes));
 
     try {
       const response = await fetch("http://localhost:3000/create-event", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`, // Add JWT token to Authorization header
+          Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
@@ -141,9 +116,7 @@ const CreateEventForm: React.FC = () => {
         alert("Event created successfully!");
       } else {
         const errorData = await response.json();
-        alert(
-          `Error: ${errorData.message || "Failed to create event"} ${response.status}`
-        );
+        alert(`Error: ${errorData.message || "Failed to create event"} ${response.status}`);
       }
     } catch (error) {
       console.error("Submission error:", error);
@@ -155,9 +128,7 @@ const CreateEventForm: React.FC = () => {
     <form onSubmit={handleSubmit} className="max-w-lg mx-auto p-4 space-y-4">
       {/* Event Title */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Event Title
-        </label>
+        <label className="block text-sm font-medium text-gray-700">Event Title</label>
         <input
           type="text"
           value={eventTitle}
@@ -170,9 +141,7 @@ const CreateEventForm: React.FC = () => {
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Description
-        </label>
+        <label className="block text-sm font-medium text-gray-700">Description</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -184,9 +153,7 @@ const CreateEventForm: React.FC = () => {
 
       {/* Location */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Location
-        </label>
+        <label className="block text-sm font-medium text-gray-700">Location</label>
         <input
           type="text"
           value={location}
@@ -199,9 +166,7 @@ const CreateEventForm: React.FC = () => {
 
       {/* Event Date */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Event Date
-        </label>
+        <label className="block text-sm font-medium text-gray-700">Event Date</label>
         <input
           type="datetime-local"
           value={eventDate}
@@ -213,11 +178,8 @@ const CreateEventForm: React.FC = () => {
 
       {/* Event Types */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Event Types
-        </label>
+        <label className="block text-sm font-medium text-gray-700">Event Types</label>
         <div className="mt-1">
-          {/* Input to add a new event type */}
           <div className="mt-2 flex">
             <input
               type="text"
@@ -235,7 +197,6 @@ const CreateEventForm: React.FC = () => {
               Add
             </button>
           </div>
-          {/* Display added event types as bubbles */}
           <div className="flex flex-wrap gap-2 mt-5 mb-5">
             {eventTypes.map((type, index) => (
               <div
@@ -257,13 +218,10 @@ const CreateEventForm: React.FC = () => {
         </div>
       </div>
 
-      {/* Picture Upload - Convert to + Button */}
+      {/* Picture Upload */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Upload Pictures
-        </label>
+        <label className="block text-sm font-medium text-gray-700">Upload Pictures</label>
         <div className="flex items-center space-x-2">
-          {/* "+" Button for uploading pictures */}
           <button
             type="button"
             onClick={() => document.getElementById("fileInput")?.click()}
@@ -272,7 +230,6 @@ const CreateEventForm: React.FC = () => {
           >
             +
           </button>
-          {/* Hidden File Input */}
           <input
             id="fileInput"
             type="file"
@@ -283,7 +240,6 @@ const CreateEventForm: React.FC = () => {
           />
         </div>
 
-        {/* Display picture previews with thumbnail selection and remove functionality */}
         {filePreviews.length > 0 && (
           <div className="mt-2 grid grid-cols-3 gap-2">
             {filePreviews.map((fileObj, index) => (
@@ -293,7 +249,6 @@ const CreateEventForm: React.FC = () => {
                   alt={`Preview ${index + 1}`}
                   className="object-cover h-24 w-full rounded-md"
                 />
-                {/* Thumbnail Selection Button (moved to top left) */}
                 <button
                   type="button"
                   onClick={() => handleThumbnailSelect(index)}
@@ -306,19 +261,19 @@ const CreateEventForm: React.FC = () => {
                 >
                   {thumbnailIndex === index ? "★" : "☆"}
                 </button>
-                {/* Remove Image Button (placed at top right) */}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveImage(index)}
-                  className="absolute top-1 right-1 bg-white rounded-full p-1 border text-red-500"
-                  title="Remove image"
-                >
-                  ✕
-                </button>
               </div>
             ))}
           </div>
         )}
+
+        {/* Clear Images Button */}
+        <button
+          type="button"
+          onClick={handleClearImages}
+          className="mt-4 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 w-full"
+        >
+          Clear All Images
+        </button>
       </div>
 
       {/* Submit Button */}

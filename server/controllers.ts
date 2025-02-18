@@ -558,4 +558,169 @@ controller.updateComment = async (req: any, res: Response) => {
 
 
 
+controller.getUserEvents = async (req: any, res: Response) =>{
+  try {
+    // Extract pagination query parameters (default limit=5 and offset=0)
+    const limit: number = req.query.limit ? parseInt(req.query.limit as string, 10) : 5;
+    const offset: number = req.query.offset ? parseInt(req.query.offset as string, 10) : 0;
+    const currentPage: number = Math.floor(offset / limit) + 1;
+
+    // The auth middleware attaches the authenticated user to req.user.
+    // Ensure we have a valid user.
+    const user: any = req.user;
+    if (!user) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
+    // 1️⃣ My Events: events created by the authenticated user (hostID === user.userID)
+    const myEventsData = await db.Event.findAndCountAll({
+      where: { hostID: user.userID },
+      attributes: ["eventID", "eventTitle", "thumbnail", "location", "eventDate"],
+      limit,
+      offset,
+      order: [["createdAt", "DESC"]],
+    });
+    const myEvents = myEventsData.rows.map((event: any) => event.get({ plain: true }));
+
+    // 2️⃣ Attending Events: events where the user is marked as "Going" in EventAttendance.
+    //    We join the Event table to retrieve event details.
+    const attendingData = await db.EventAttendance.findAndCountAll({
+      where: { userID: user.userID, status: "Going" },
+      include: [
+        {
+          model: db.Event,
+          attributes: ["eventID", "eventTitle", "thumbnail", "location", "eventDate"],
+        },
+      ],
+      limit,
+      offset,
+      order: [[db.Event, "eventDate", "DESC"]],
+    });
+    const attendingEvents = attendingData.rows
+      .map((attendance: any) => attendance.Event)
+      .filter((ev: any) => ev) // Filter out any missing event (if any)
+      .map((ev: any) => ev.get({ plain: true }));
+
+    // 3️⃣ Interested Events: events where the user is marked as "Interested"
+    const interestedData = await db.EventAttendance.findAndCountAll({
+      where: { userID: user.userID, status: "Interested" },
+      include: [
+        {
+          model: db.Event,
+          attributes: ["eventID", "eventTitle", "thumbnail", "location", "eventDate"],
+        },
+      ],
+      limit,
+      offset,
+      order: [[db.Event, "eventDate", "DESC"]],
+    });
+    const interestedEvents = interestedData.rows
+      .map((attendance: any) => attendance.Event)
+      .filter((ev: any) => ev)
+      .map((ev: any) => ev.get({ plain: true }));
+
+    // Build the response object with the expected structure.
+    res.json({
+      myEvents: {
+        events: myEvents,
+        totalCount: myEventsData.count,
+        currentPage,
+        limit,
+      },
+      attendingEvents: {
+        events: attendingEvents,
+        totalCount: attendingData.count,
+        currentPage,
+        limit,
+      },
+      interestedEvents: {
+        events: interestedEvents,
+        totalCount: interestedData.count,
+        currentPage,
+        limit,
+      },
+    });
+  } catch (error: any) {
+    console.error("Error in getUserEvents controller:", error);
+    res.status(500).send(error)
+  }
+};
+
+
+controller.getMyEvents = async (req: any, res: Response) => {
+  try {
+    const { limit, offset } = req.query;
+    const userID = req.user.userID;
+
+    const events = await db.Event.findAll({
+      where: { hostID: userID },
+      limit: limit || 5,
+      offset: offset || 0,
+    });
+
+
+    res.json({
+      events,
+
+    });
+  } catch (error) {
+    console.error("Error fetching user's events:", error);
+    res.status(500).json({ error: "Failed to fetch events" });
+  }
+};
+
+controller.getAttendingEvents = async (req: any, res: Response) => {
+  try {
+    const { limit, offset } = req.query;
+    const userID = req.user.userID;
+
+    const events = await db.Event.findAll({
+      include: [
+        {
+          model: db.EventAttendance,
+          where: { userID: userID, status: 'Going' },
+        },
+      ],
+      limit: limit || 5,
+      offset: offset || 0,
+    });
+
+
+    res.json({
+      events,
+    });
+  } catch (error) {
+    console.error("Error fetching attending events:", error);
+    res.status(500).json({ error: "Failed to fetch attending events" });
+  }
+};
+
+controller.getInterestedEvents = async (req: any, res: Response) => {
+  try {
+    const { limit, offset } = req.query;
+    const userID = req.user.userID;
+
+    const events = await db.Event.findAll({
+      include: [
+        {
+          model: db.EventAttendance,
+          where: { userID: userID, status: 'Interested' },
+        },
+      ],
+      limit: limit || 5,
+      offset: offset || 0,
+    });
+
+    
+
+    res.json({
+      events,
+    });
+  } catch (error) {
+    console.error("Error fetching interested events:", error);
+    res.status(500).json({ error: "Failed to fetch interested events" });
+  }
+};
+
 export default controller;

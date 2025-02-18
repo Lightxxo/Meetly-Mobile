@@ -5,7 +5,7 @@ export default function EventCard({ event }: { event: any }) {
   
   return (
     <div 
-      className="bg-white shadow-md rounded-lg p-4 hover:shadow-lg transition duration-300 cursor-pointer"
+      className="bg-white shadow-md rounded-lg p-0 pb-4 hover:shadow-lg transition duration-300 cursor-pointer transition transform hover:scale-105"
       onClick={() => navigate(`/event/${event.eventID}`)}
     >
       {/* Thumbnail Image */}
@@ -16,18 +16,18 @@ export default function EventCard({ event }: { event: any }) {
       />
 
       {/* Event Title */}
-      <h3 className="text-xl font-bold mb-2">{event.eventTitle}</h3>
+      <h3 className="text-xl pl-4 pr-4 font-bold mb-2">{event.eventTitle}</h3>
 
       {/* Event Date */}
-      <p className="text-gray-600 text-sm">
+      <p className="text-gray-600 pl-4 pr-4 text-sm">
         📅 {new Date(event.eventDate).toLocaleDateString()}
       </p>
 
       {/* Location */}
-      <p className="text-gray-700 text-sm mt-1">📍 {event.location}</p>
+      <p className="text-gray-700 pl-4 pr-4 text-sm mt-1">📍 {event.location}</p>
 
       {/* Description */}
-      <p className="text-gray-500 text-sm mt-2 line-clamp-3">{event.description}</p>
+      <p className="text-gray-500 pl-4 pr-4 text-sm mt-2 line-clamp-3">{event.description}</p>
     </div>
   );
 }

@@ -1,12 +1,10 @@
 Complete GOING Interested Not Going
-
-
 Implement comments
     write comment
-######CURRENNT PROGRESS####
     delete comment
     edit comment
 
+######CURRENNT PROGRESS####
 Implement User Section
     My Events
         edit event

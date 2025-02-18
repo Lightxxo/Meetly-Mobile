@@ -10,4 +10,8 @@ export type UserDataType = {
   username: String,
   email: String,
 }
-  
+
+
+export type UserLoadedType = {
+  loaded: boolean
+}

@@ -1,11 +1,12 @@
 import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Loading from "./Loading";
-import { UserContext } from "../contexts/Contexts";
-import cookieStateSync from "../utils/cookieStateSync";
+import { UserContext, UserLoadedContext } from "../contexts/Contexts";
+
 import Cookies from "js-cookie";
 import { Bounce, toast, ToastContainer } from "react-toastify";
 import { FaEdit, FaTrashAlt, FaSave } from "react-icons/fa";
+
 
 export default function EventDetailsPage() {
   const { eventID } = useParams<{ eventID: string }>();
@@ -15,10 +16,10 @@ export default function EventDetailsPage() {
   const [interested, setInterested] = useState(0);
   const [loading, setLoading] = useState(true);
   const userContext = useContext(UserContext);
-  const [userLoaded, setUserLoaded] = useState(false);
+  const {userLoaded, setUserLoaded} = useContext(UserLoadedContext)!;
 
   const [newComment, setNewComment] = useState<string>("");
-
+  const token = Cookies.get("user");
   // Function to handle the comment input change
   const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNewComment(e.target.value);
@@ -70,7 +71,7 @@ export default function EventDetailsPage() {
 
         setDetails((oldDetails: any) => {
           let newComment = Array.from(oldDetails.comments);
-          newComment.push(result);
+          newComment.unshift(result);
           return { ...oldDetails, comments: newComment };
         });
       } else {
@@ -90,10 +91,10 @@ export default function EventDetailsPage() {
   const { userData, setUserData } = userContext;
 
   useEffect(() => {
-    const token = Cookies.get("user");
-    console.log(userLoaded, token);
+    
+    console.log(userLoaded.loaded, token);
     // Check if the token exists and if user is loaded
-    if (userLoaded && token) {
+    if (userLoaded.loaded && token) {
       try {
         const parsedToken = JSON.parse(token);
 
@@ -136,9 +137,7 @@ export default function EventDetailsPage() {
     }
   }, [userLoaded]); // Dependency on userData.userID to refetch on change
 
-  useEffect(() => {
-    cookieStateSync(setUserData);
-  }, []);
+
 
   useEffect(() => {
     if (details) {
@@ -152,9 +151,9 @@ export default function EventDetailsPage() {
 
     if (cookie) {
       if (userData.token.length) {
-        setUserLoaded(true);
+        setUserLoaded({loaded:true});
       } else {
-        setUserLoaded(false);
+        setUserLoaded({loaded:false});
       }
     }
   }, [userData]);
@@ -182,7 +181,7 @@ export default function EventDetailsPage() {
     fetchEventDetails();
   }, [eventID]);
 
-  if (loading && !userLoaded) return <Loading />;
+  if (loading && !userLoaded.loaded) return <Loading />;
   if (!details)
     return <div className="text-center p-4">No event details available.</div>;
 
@@ -535,7 +534,7 @@ export default function EventDetailsPage() {
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               Attendees (Going)
             </h2>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="flex flex-row max-width-[200px] overflow-y gap-10">
               {attendees && attendees.length > 0 ? (
                 attendees.map((att: any, index: number) => (
                   <div key={index} className="flex flex-row items-center gap-2">

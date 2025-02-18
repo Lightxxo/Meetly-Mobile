@@ -3,13 +3,17 @@ import SearchBar from "./Searchbar";
 import { useNavigate } from "react-router-dom";
 import LoginLogoutButton from "./LoginLogoutButton";
 
+import ProfileButton from "./ProfileButton";
+
 
 export default function AppHeader(): JSX.Element {
+
+
   return (
     <>
       <div>
         <div className="hidden lg:block">
-          <LargeScreenLayout />
+          <LargeScreenLayout/>
         </div>
         <div className="lg:hidden">
           <SmallScreenLayout />
@@ -39,7 +43,9 @@ const LargeScreenLayout = () => {
       <div className="flex-grow flex justify-center">
         <SearchBar />
       </div>
-      <div>
+      <div className="flex flex-row gap-5 justify-center items-center">
+      
+        <ProfileButton ></ProfileButton>
         <LoginLogoutButton></LoginLogoutButton>
       </div>
     </div>
@@ -56,7 +62,8 @@ const SmallScreenLayout = () => {
             MEETLY
           </div>
         </div>
-        <div>
+        <div className="flex flex-row gap-5 justify-center items-center">
+          <ProfileButton></ProfileButton>
           <LoginLogoutButton></LoginLogoutButton>
         </div>
       </div>

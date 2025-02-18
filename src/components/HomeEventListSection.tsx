@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { UserContext } from "../contexts/Contexts";
+import { UserContext, UserLoadedContext } from "../contexts/Contexts";
 import Cookies from "js-cookie";
 import cookieStateSync from "../utils/cookieStateSync";
 import Loading from "./Loading";
@@ -7,6 +7,7 @@ import EventCard from "./EventCard";
 
 export default function HomeEventListSection() {
   const userContext = useContext(UserContext);
+  const { setUserLoaded} = useContext(UserLoadedContext)!;
   const [isLoaded, setIsLoaded] = useState(false);
   const [offset, setOffset] = useState(0);
   const [eventData, setEventData] = useState<any>({ events: [], totalEvents: 0, hasMore: false });
@@ -21,7 +22,7 @@ export default function HomeEventListSection() {
   const { userData, setUserData } = userContext;
 
   useEffect(() => {
-    cookieStateSync(setUserData);
+    cookieStateSync(setUserData, setUserLoaded);
     const fetchEvents = async () => {
       try {
         const response = await fetch(`http://localhost:3000/events?limit=${limit}&offset=${offset}`, {

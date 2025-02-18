@@ -19,5 +19,8 @@ router.post('/rsvp-status', authMiddleware, controller.postUserRSVPStatus)
 router.post('/event-comment', authMiddleware, controller.postComment)
 router.delete('/delete-comment', authMiddleware, controller.deleteComment)
 router.put('/update-comment', authMiddleware, controller.updateComment)
-
+router.get('/user', authMiddleware, controller.getUserEvents)
+router.get('/user/my', authMiddleware, controller.getMyEvents)
+router.get('/user/interested', authMiddleware, controller.getInterestedEvents)
+router.get('/user/attending', authMiddleware, controller.getAttendingEvents)
 export default router;  

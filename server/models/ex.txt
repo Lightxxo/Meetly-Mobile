@@ -54,6 +54,7 @@ export default (sequelize: Sequelize) => {
   return Event;
 };
 
+
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export default (sequelize: Sequelize) => {
@@ -64,10 +65,12 @@ export default (sequelize: Sequelize) => {
       eventID: {
         type: DataTypes.UUID,
         allowNull: false,
+        primaryKey: true,
       },
       userID: {
         type: DataTypes.UUID,
         allowNull: false,
+        primaryKey: true,
       },
       status: {
         type: DataTypes.ENUM('Going', 'Interested', 'Not Going'),
@@ -83,6 +86,7 @@ export default (sequelize: Sequelize) => {
   EventAttendance.removeAttribute('id');
   return EventAttendance;
 };
+
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export default (sequelize: Sequelize) => {
@@ -90,13 +94,25 @@ export default (sequelize: Sequelize) => {
 
   EventComment.init(
     {
+      commentID: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        allowNull:false,
+        primaryKey:true
+      },
       eventID: {
         type: DataTypes.UUID,
         allowNull: false,
+
+      },
+      username:{
+        type: DataTypes.STRING(50),
+        allowNull:false
       },
       userID: {
         type: DataTypes.UUID,
         allowNull: false,
+
       },
       rating: {
         type: DataTypes.DECIMAL(2, 1),
@@ -105,7 +121,7 @@ export default (sequelize: Sequelize) => {
       },
       comment: {
         type: DataTypes.TEXT,
-        allowNull: false,
+        allowNull: false, 
       },
     },
     {
@@ -115,7 +131,6 @@ export default (sequelize: Sequelize) => {
     }
   );
 
-  EventComment.removeAttribute('id');
   return EventComment;
 };
 
@@ -298,7 +313,7 @@ db.EventType.belongsToMany(db.Event, { through: db.EventTypeOfEvent, foreignKey:
 
 const syncDatabase = async () => {
   try {
-    await sequelize.sync({ force: true });
+    await sequelize.sync({ alter: true });
     console.log("Database synchronized successfully.");
   } catch (error) {
     console.error("Database synchronization failed:", error);
@@ -308,6 +323,3 @@ const syncDatabase = async () => {
 syncDatabase();
 
 export default db;
-
-
-

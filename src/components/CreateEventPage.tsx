@@ -1,7 +1,7 @@
-import { useContext, useEffect, useState } from "react";
-import { UserContext } from "../contexts/Contexts";
+import { useContext, useEffect } from "react";
+import { UserContext, UserLoadedContext } from "../contexts/Contexts";
 import Cookies from "js-cookie";
-import cookieStateSync from "../utils/cookieStateSync";
+
 import { useNavigate } from "react-router-dom";
 import Loading from "./Loading";
 import CreateEventForm from "./CreateEventForm";
@@ -15,41 +15,50 @@ export default function CreateEventPage() {
     );
   }
 
-  const { userData, setUserData } = userContext;
-  const [userLoaded, setUserLoaded] = useState(false);
+  const { userData } = userContext;
+  const { userLoaded } = useContext(UserLoadedContext)!;
   const navigate = useNavigate();
-
-  useEffect(() => {
-    cookieStateSync(setUserData);
-  }, [setUserData]);
 
   useEffect(() => {
     const cookie = Cookies.get("user");
 
-    if (cookie) {
-      if (userData.token.length) {
-        setUserLoaded(true);
-      } else {
-        setUserLoaded(false);
-      }
-    } else {
+    if (!cookie) {
       navigate("/login");
     }
   }, [userData]);
 
-  useEffect(() => {
-    console.log("USERLOADED", userLoaded, userData);
-  }, [userLoaded]);
-
-  return <>{userLoaded ? <CreateEvent></CreateEvent> : <Loading></Loading>}</>;
+  return (
+    <>{userLoaded.loaded ? <CreateEvent></CreateEvent> : <Loading></Loading>}</>
+  );
 
   function CreateEvent() {
     return (
       <div>
-        <button className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full mt-10 ml-10 mb-10" onClick={()=>{navigate(-1)}}>
-          Back
-        </button>
-        <h2 className="font-bold text-4xl mx-auto text-center mb-10">Create a new event! ✨</h2>
+        <div className="mb-6 p-10">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center text-blue-500 hover:text-blue-600 focus:outline-none"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-6 h-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            <span className="ml-2 text-lg">Back</span>
+          </button>
+        </div>
+        <h2 className="font-bold text-4xl mx-auto text-center mb-10">
+          Create a new event! ✨
+        </h2>
         <CreateEventForm></CreateEventForm>
       </div>
     );
