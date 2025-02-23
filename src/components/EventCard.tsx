@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
 
-export default function EventCard({ event }: { event: any }) {
+export default function EventCard({ event, flag = false }: { event: any; flag?: boolean }) {
   const navigate = useNavigate();
-  
+
   return (
-    <div 
-      className="bg-white shadow-md rounded-lg p-0 pb-4 hover:shadow-lg transition duration-300 cursor-pointer transition transform hover:scale-105"
+    <div
+      className={`bg-white shadow-md rounded-lg p-0 pb-4 hover:shadow-lg transition duration-300 cursor-pointer 
+      ${!flag ? "hover:scale-105" : "hover:scale-101"}`}
       onClick={() => navigate(`/event/${event.eventID}`)}
     >
       {/* Thumbnail Image */}

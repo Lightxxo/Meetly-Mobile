@@ -14,6 +14,7 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
         primaryKey: true,
+        
       },
       status: {
         type: DataTypes.ENUM('Going', 'Interested', 'Not Going'),

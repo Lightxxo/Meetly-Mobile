@@ -1,6 +1,7 @@
 import Cookies from "js-cookie";
+import { toast } from "react-toastify";
 
-export default async function validateUser(userData:any, setUserData:any, navigate:any, naviageTo:string, onFailNavigate:string = "", ifSuccessNavigateFlag:boolean = true ) {
+export default async function validateUser(userData:any, setUserData:any, navigate:any, naviageTo:string|number, onFailNavigate:string|number = "", ifSuccessNavigateFlag:boolean = true ) {
     const token = Cookies.get("user")
     if ( token && userData.token.length) {
         const response = await fetch("http://localhost:3000/user-token-verify", {
@@ -28,7 +29,9 @@ export default async function validateUser(userData:any, setUserData:any, naviga
               email: ''
             });
 
-            if(onFailNavigate.length){
+            toast("Invalid Token: Please login again!")
+
+            if(typeof onFailNavigate === "string" && onFailNavigate.length){
                 navigate(onFailNavigate)
             }
         }

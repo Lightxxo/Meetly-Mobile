@@ -1,10 +1,10 @@
 import { useContext } from "react";
 import { UserContext } from "../contexts/Contexts";
-import { ToastContainer, toast, Bounce } from "react-toastify";
+import {  toast} from "react-toastify";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 
-export default function CreateEventButton() {
+export default function CreateEventButton({text = "Create Event!"}: {text?:string}) {
   const userContext = useContext(UserContext);
   const navigate = useNavigate();
 
@@ -41,11 +41,15 @@ export default function CreateEventButton() {
               username: '',
               email: ''
             });
+            
+            toast("Token invalid: Please Login!");
         }
 
     } else {
         toast('Please Login!');
     }
+
+
   };
 
   return (
@@ -54,23 +58,10 @@ export default function CreateEventButton() {
         className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full"
         onClick={handleCreateEvent}
       >
-        Create Event!
+        {text}
       </button>
 
-      <ToastContainer
-    
-        position="top-center"
-        autoClose={500}
-        hideProgressBar={true}
-        newestOnTop={false}
-        closeOnClick={true}
-        rtl={false}
-        pauseOnFocusLoss
-        pauseOnHover
-        theme="light"
-        transition={Bounce}
-        className= "text-center"
-      />
+
     </div>
   );
 }

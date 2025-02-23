@@ -1,5 +1,6 @@
 import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import Cookies from "js-cookie";
+import { toast } from "react-toastify";
 
 type FilePreview = {
   file: File;
@@ -79,12 +80,13 @@ const CreateEventForm: React.FC = () => {
     e.preventDefault();
 
     if (eventTypes.length === 0) {
-      alert("Please add at least one event type.");
+      toast("Please add at least one event type.")
+
       return;
     }
 
     if (filePreviews.length === 0) {
-      alert("Please upload at least one picture.");
+      toast("Please upload at least one picture.")
       return;
     }
 
@@ -113,14 +115,16 @@ const CreateEventForm: React.FC = () => {
       });
 
       if (response.ok) {
-        alert("Event created successfully!");
+        toast("Event created successfully!")
+
       } else {
         const errorData = await response.json();
-        alert(`Error: ${errorData.message || "Failed to create event"} ${response.status}`);
+        toast(`Error: ${errorData.message || "Failed to create event"} ${response.status}`)
+
       }
     } catch (error) {
       console.error("Submission error:", error);
-      alert("An error occurred while creating the event.");
+      toast("An error occurred while creating the event.")
     }
   };
 

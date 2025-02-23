@@ -1,12 +1,13 @@
 import { useContext, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Loading from "./Loading";
 import { UserContext, UserLoadedContext } from "../contexts/Contexts";
 
 import Cookies from "js-cookie";
-import { Bounce, toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { FaEdit, FaTrashAlt, FaSave } from "react-icons/fa";
-
+import validateUser from "../utils/validateUser";
+import ImageCard from "./ImageCard";
 
 export default function EventDetailsPage() {
   const { eventID } = useParams<{ eventID: string }>();
@@ -16,7 +17,8 @@ export default function EventDetailsPage() {
   const [interested, setInterested] = useState(0);
   const [loading, setLoading] = useState(true);
   const userContext = useContext(UserContext);
-  const {userLoaded, setUserLoaded} = useContext(UserLoadedContext)!;
+  const { userLoaded } = useContext(UserLoadedContext)!;
+  const navigate = useNavigate();
 
   const [newComment, setNewComment] = useState<string>("");
   const token = Cookies.get("user");
@@ -54,7 +56,6 @@ export default function EventDetailsPage() {
 
   const submitCommentToServer = async (newCommentData: any) => {
     const token = Cookies.get("user");
-    console.log(token);
     try {
       const response = await fetch("http://localhost:3000/event-comment", {
         method: "POST",
@@ -91,8 +92,6 @@ export default function EventDetailsPage() {
   const { userData, setUserData } = userContext;
 
   useEffect(() => {
-    
-    console.log(userLoaded.loaded, token);
     // Check if the token exists and if user is loaded
     if (userLoaded.loaded && token) {
       try {
@@ -127,6 +126,7 @@ export default function EventDetailsPage() {
               username: "",
               email: "",
             });
+            toast("Token invalid: Please Login!");
           }
         };
 
@@ -135,9 +135,7 @@ export default function EventDetailsPage() {
         console.error("Error parsing token", error);
       }
     }
-  }, [userLoaded]); // Dependency on userData.userID to refetch on change
-
-
+  }, [userLoaded.loaded, userData.userID]); // Dependency on userData.userID to refetch on change
 
   useEffect(() => {
     if (details) {
@@ -145,18 +143,6 @@ export default function EventDetailsPage() {
       setInterested(details.interestedCount);
     }
   }, [details]);
-
-  useEffect(() => {
-    const cookie = Cookies.get("user");
-
-    if (cookie) {
-      if (userData.token.length) {
-        setUserLoaded({loaded:true});
-      } else {
-        setUserLoaded({loaded:false});
-      }
-    }
-  }, [userData]);
 
   const fetchEventDetails = async () => {
     try {
@@ -176,14 +162,25 @@ export default function EventDetailsPage() {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     fetchEventDetails();
   }, [eventID]);
 
-  if (loading && !userLoaded.loaded) return <Loading />;
-  if (!details)
+  // Wait for both user and event details to finish loading.
+  if (token && !userLoaded.loaded) {
+    return <Loading />;
+  }
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  // Once loading is finished, check if event details are available.
+  // You might also want to check for an empty object if your API returns {}.
+  if (!details || Object.keys(details).length === 0) {
     return <div className="text-center p-4">No event details available.</div>;
+  }
 
   const { event, images, attendees, comments, host } = details;
 
@@ -195,7 +192,7 @@ export default function EventDetailsPage() {
   function Comment({ comment }: any) {
     const [isEditing, setIsEditing] = useState(false);
     const [editedComment, setEditedComment] = useState(comment.comment);
-  
+
     async function handleCommentDelete() {
       const token = Cookies.get("user");
       console.log("DELETEEE TOKEN", token);
@@ -205,9 +202,13 @@ export default function EventDetailsPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(comment),
+        body: JSON.stringify({
+          userID: userData.userID,
+          eventID: eventID,
+          commentID: comment.commentID,
+        }),
       });
-  
+
       if (response.ok) {
         console.log("comment deleted successfully");
         setDetails((oldDetails: any) => ({
@@ -218,11 +219,11 @@ export default function EventDetailsPage() {
         }));
       }
     }
-  
+
     async function handleCommentEdit() {
       setIsEditing(true);
     }
-  
+
     async function handleUpdateComment() {
       if (editedComment.trim() === "") {
         // If the comment is empty, trigger delete
@@ -230,34 +231,36 @@ export default function EventDetailsPage() {
       } else {
         // Otherwise, update the comment
         const token = Cookies.get("user");
-  
-        const updatedCommentData = {
-          ...comment,
-          comment: editedComment,
-        };
-  
+
         const response = await fetch(`http://localhost:3000/update-comment`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(updatedCommentData),
+          body: JSON.stringify({
+            userID: userData.userID,
+            eventID: eventID,
+            commentID: comment.commentID,
+            comment: editedComment,
+          }),
         });
-  
+
         if (response.ok) {
           console.log("Comment updated successfully");
           setIsEditing(false);
           setDetails((oldDetails: any) => ({
             ...oldDetails,
             comments: oldDetails.comments.map((c: any) =>
-              c.commentID === comment.commentID ? { ...c, comment: editedComment } : c
+              c.commentID === comment.commentID
+                ? { ...c, comment: editedComment }
+                : c
             ),
           }));
         }
       }
     }
-  
+
     return (
       <div className="relative mb-4 p-4 bg-gray-100 rounded-lg flex flex-row items-start">
         {/* Avatar and Username Section */}
@@ -267,7 +270,7 @@ export default function EventDetailsPage() {
             @{comment.username.toLowerCase()}:
           </span>
         </div>
-  
+
         {/* Comment Text Section */}
         {isEditing ? (
           <textarea
@@ -278,7 +281,7 @@ export default function EventDetailsPage() {
         ) : (
           <p className="text-gray-600 mt-1 ml-2">{comment.comment}</p>
         )}
-  
+
         {/* Edit and Delete Icons */}
         {userData.userID === comment.userID && (
           <div className="absolute top-2 right-2 flex space-x-2">
@@ -381,7 +384,7 @@ export default function EventDetailsPage() {
           });
 
         const data = await response.json();
-        console.log(data);
+
         setDetails(data);
       } else if (response.status !== 500) {
         Cookies.remove("user");
@@ -391,6 +394,7 @@ export default function EventDetailsPage() {
           username: "",
           email: "",
         });
+        toast("Token invalid: Please Login!");
       }
     }
   }
@@ -410,21 +414,55 @@ export default function EventDetailsPage() {
     );
   };
 
+  function handleEditOnClick() {
+    const doesThisApiNeedCalling = 0;
+    // validateUser(userData, setUserData, navigate, `/edit-event?eventID=${eventID}`, '')
+    navigate(`/edit-event?eventID=${eventID}`, { state: details });
+  }
+
   return (
     <div>
       <div className="container mx-auto p-6 space-y-10">
         {/* Event Title & Hosted By */}
-        <div className="space-y-4">
-          <h1 className="text-6xl font-bold text-gray-900 pb-10 break-all">
-            {event.eventTitle}
-          </h1>
-          <div className="flex items-center space-x-4">
-            <AttendeeAvatar username={host.username} />
-            <div>
-              <p className="text-lg font-semibold">Hosted by</p>
-              <p className="text-gray-700">{host.username}</p>
+        <div className="flex flex-row justify-between">
+          <div className="space-y-4">
+            <h1 className="text-6xl font-bold text-gray-900 pb-10 break-all">
+              {event.eventTitle}
+            </h1>
+            <div className="flex items-center space-x-4">
+              <AttendeeAvatar username={host.username} />
+              <div>
+                <p className="text-lg font-semibold">Hosted by</p>
+                <p className="text-gray-700">{host.username}</p>
+              </div>
             </div>
           </div>
+
+          {userData.userID === details.host.userID ? (
+            <div>
+              <button
+                className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition"
+                onClick={handleEditOnClick}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2"
+                  stroke="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16.862 3.487a3.375 3.375 0 1 1 4.775 4.775L6.75 23.25l-4.5 1 1-4.5L16.862 3.487z"
+                  />
+                </svg>
+              </button>
+            </div>
+          ) : (
+            <></>
+          )}
         </div>
 
         {/* Main Event Image */}
@@ -445,6 +483,7 @@ export default function EventDetailsPage() {
           </div>
 
           {/* Right: Event Meta Details */}
+
           <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
             <div className="flex items-center space-x-3">
               <span className="text-gray-500">📅</span>
@@ -462,6 +501,27 @@ export default function EventDetailsPage() {
               </p>
             </div>
 
+            {/* Event Types Section */}
+            {details.eventTypes && details.eventTypes.length ? (
+              <p className="border-t border-gray-300 pt-4">{`Category ( ${details.eventTypes.length} )`}</p>
+            ) : (
+              <></>
+            )}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {details.eventTypes && details.eventTypes.length ? (
+                details.eventTypes.map((type: string, index: number) => (
+                  <span
+                    key={`${type}${index}`}
+                    className="bg-gray-100 hover:bg-gray-200 text-white-600 text-sm font-medium px-3 py-1 rounded-full shadow-sm"
+                  >
+                    {type}
+                  </span>
+                ))
+              ) : (
+                <></>
+              )}
+            </div>
+
             {/* RSVP Section */}
             <div className="bg-white p-6 rounded-lg border-2 border-neutral-200">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">
@@ -469,9 +529,9 @@ export default function EventDetailsPage() {
               </h2>
               <div className="flex flex-wrap gap-4">
                 <button
-                  className={`px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600 transition w-full sm:w-auto ${
+                  className={`px-4 py-2 bg-stone-200 text-black font-semibold rounded-lg shadow-md hover:bg-stone-400 transition w-full sm:w-auto ${
                     rsvp === "going" && userData.token
-                      ? "bg-red-500 hover:bg-red-700"
+                      ? "bg-zinc-900 hover:bg-zinc-700 text-white"
                       : ""
                   }`}
                   onClick={() => {
@@ -487,9 +547,9 @@ export default function EventDetailsPage() {
                   Going
                 </button>
                 <button
-                  className={`px-4 py-2 bg-neutral-100 text-black font-semibold rounded-lg shadow-md hover:bg-neutral-300 transition w-full sm:w-auto ${
+                  className={`px-4 py-2 bg-stone-200 text-black font-semibold rounded-lg shadow-md hover:bg-stone-400 transition w-full sm:w-auto ${
                     rsvp === "interested" && userData.token
-                      ? "bg-red-500 hover:bg-red-700"
+                      ? "bg-zinc-900 hover:bg-zinc-700 text-white"
                       : ""
                   }`}
                   onClick={() => {
@@ -505,9 +565,9 @@ export default function EventDetailsPage() {
                   Interested
                 </button>
                 <button
-                  className={`px-4 py-2 bg-neutral-950 text-white font-semibold rounded-lg shadow-md hover:bg-neutral-700 transition w-full sm:w-auto ${
+                  className={`px-4 py-2 bg-stone-200 text-black font-semibold rounded-lg shadow-md hover:bg-stone-200 transition w-full sm:w-auto ${
                     rsvp === "not going" && userData.token
-                      ? "bg-red-500 hover:bg-red-700"
+                      ? "bg-zinc-900 hover:bg-zinc-700 text-white"
                       : ""
                   }`}
                   onClick={() => {
@@ -534,7 +594,7 @@ export default function EventDetailsPage() {
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               Attendees (Going)
             </h2>
-            <div className="flex flex-row max-width-[200px] overflow-y gap-10">
+            <div className="flex flex-row gap-10 overflow-x-auto max-w-full p-2">
               {attendees && attendees.length > 0 ? (
                 attendees.map((att: any, index: number) => (
                   <div key={index} className="flex flex-row items-center gap-2">
@@ -557,11 +617,10 @@ export default function EventDetailsPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {images && images.length > 0 ? (
               images.map((img: any, index: number) => (
-                <img
+                <ImageCard
                   key={index}
-                  src={img.image}
-                  alt={`${event.eventTitle} ${index + 1}`}
-                  className="w-full h-40 object-cover rounded-lg shadow-md"
+                  imageUrl={img.image}
+                  altText={`${event.eventTitle} ${index + 1}`}
                 />
               ))
             ) : (
@@ -598,7 +657,7 @@ export default function EventDetailsPage() {
             />
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg mb-10 hover:bg-blue-700"
+              className="px-4 py-2 bg-gray-500 text-white rounded-lg mb-10 hover:bg-gray-700"
             >
               Submit Comment
             </button>
@@ -607,20 +666,6 @@ export default function EventDetailsPage() {
           <OthersComment></OthersComment>
         </div>
       </div>
-
-      <ToastContainer
-        position="top-center"
-        autoClose={500}
-        hideProgressBar={true}
-        newestOnTop={false}
-        closeOnClick={true}
-        rtl={false}
-        pauseOnFocusLoss
-        pauseOnHover
-        theme="light"
-        transition={Bounce}
-        className="text-center"
-      />
     </div>
   );
 }

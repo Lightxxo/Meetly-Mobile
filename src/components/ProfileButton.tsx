@@ -32,7 +32,8 @@ export default function ProfileButton() {
  
 
   async function handleProfileClick(){
-    validateUser(userData, setUserData, navigate, "/user");
+    // validateUser(userData, setUserData, navigate, "/user");
+    navigate("/user");
   }
 
   return userExists ? (

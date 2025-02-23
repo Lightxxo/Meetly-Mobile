@@ -5,6 +5,7 @@ import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import Loading from "./Loading";
 import CreateEventForm from "./CreateEventForm";
+import { toast } from "react-toastify";
 
 export default function CreateEventPage() {
   const userContext = useContext(UserContext);
@@ -23,6 +24,7 @@ export default function CreateEventPage() {
     const cookie = Cookies.get("user");
 
     if (!cookie) {
+      toast("Unauthorized");
       navigate("/login");
     }
   }, [userData]);

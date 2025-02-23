@@ -1,5 +1,6 @@
 import Cookies from "js-cookie";
 import { UserDataType } from "../types/types";
+import { toast } from "react-toastify";
 
 
 interface LogoutButtonProps {
@@ -14,7 +15,8 @@ export default function LogOutButton({ setUserData }: LogoutButtonProps) {
       userID: '',
       username: '',
       email: ''
-    }); 
+    });
+    toast("Logged out!") 
   };
 
   return (

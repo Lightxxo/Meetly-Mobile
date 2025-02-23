@@ -2,6 +2,7 @@ import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { UserContext } from "../contexts/Contexts";
+import { toast } from "react-toastify";
 
 
 const Login = () => {
@@ -35,7 +36,7 @@ const Login = () => {
       setUserData(user);
       Cookies.set('user', JSON.stringify(user), { path: "/", sameSite: "Lax" });
   } else if(response.status === 401){
-      alert('Please give valid login information!');
+      toast('Please give valid login information!');
       console.log( "Invalid Login Credentials",body);
       return; 
   }

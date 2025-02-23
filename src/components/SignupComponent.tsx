@@ -2,6 +2,7 @@ import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from 'js-cookie';
 import { UserContext } from "../contexts/Contexts";
+import { toast } from "react-toastify";
 
 const Signup = () => {
   
@@ -22,7 +23,7 @@ const Signup = () => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-        alert("Passwords do not match");
+        toast("Passwords do not match")
         return;
     }
 
@@ -45,7 +46,7 @@ const Signup = () => {
         setUserData(user);
         Cookies.set('user', JSON.stringify(user), { path: "/", sameSite: "Lax" });
     } else if(response.status === 409){
-        alert('Credentials are in use!')
+        toast('Credentials are in use!')
         console.log( "Credentials Already Exists",body);
         return; 
     }

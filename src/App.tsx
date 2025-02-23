@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import AppHeader from "./components/AppHeader";
-import { SearchContext, UserContext, UserLoadedContext } from "./contexts/Contexts";
+import {
+  SearchContext,
+  UserContext,
+  UserLoadedContext,
+} from "./contexts/Contexts";
 import { SearchDataType, UserDataType, UserLoadedType } from "./types/types";
 import { Route, Routes, useLocation } from "react-router-dom";
 import Login from "./components/LoginComponent";
@@ -15,13 +19,14 @@ import EventDetailsPage from "./components/EventDetailsPage";
 import UserPage from "./components/UserPage";
 import Cookies from "js-cookie";
 import Loading from "./components/Loading";
+import EditEventPage from "./components/EditEventPage";
 
 function App() {
-  
   const [searchData, setSearchData] = useState<SearchDataType>({
     text: "",
-    type: "",
-    timestamp: null,
+    eventTypes: [],
+    startTimestamp: "",
+    endTimestamp: "",
   });
 
   const token = Cookies.get("user");
@@ -34,8 +39,8 @@ function App() {
   });
 
   const [userLoaded, setUserLoaded] = useState<UserLoadedType>({
-    loaded:false
-  })
+    loaded: false,
+  });
 
   const location = useLocation();
 
@@ -43,50 +48,38 @@ function App() {
     cookieStateSync(setUserData, setUserLoaded);
   }, []);
 
-  useEffect(()=>{
-    
-    if(token && userData.token.length){
-      setUserLoaded({loaded:true})
+  useEffect(() => {
+    if (token && userData.token.length) {
+      setUserLoaded({ loaded: true });
     }
-  }, [userData])
+  }, [userData]);
 
   useEffect(() => {
     console.log(searchData);
   }, [searchData]);
 
+  // NEW: Clear out the search context if the current route doesn't start with '/search'
+  useEffect(() => {
+    if (!location.pathname.startsWith("/search")) {
+      setSearchData({
+        text: "",
+        eventTypes: [],
+        startTimestamp: "",
+        endTimestamp: "",
+      });
+    }
+  }, [location.pathname, setSearchData]);
 
-  if(token && !userLoaded) return <Loading></Loading>
+  if (token && !userLoaded.loaded) return <Loading />;
 
   return (
     <UserLoadedContext.Provider value={{ userLoaded, setUserLoaded }}>
-    <UserContext.Provider value={{ userData, setUserData }}>
-      <SearchContext.Provider value={{ searchData, setSearchData }}>
-        <div className="flex flex-col">
-          {/* Conditionally render AppHeader */}
-          {location.pathname === "/" ||
-          location.pathname === "/search" ||
-          location.pathname.startsWith('/event')? (
-            <AppHeader />
-          ) : (
-            <></>
-          )}
-
-          <Routes>
-            <Route path="/" element={<AppBody />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/search" element={<SearchPage></SearchPage>} />
-            <Route
-              path="/create-event"
-              element={<CreateEventPage></CreateEventPage>}
-            ></Route>
-            <Route path="/event/:eventID" element={<EventDetailsPage />} />
-            <Route path="/user" element={<UserPage></UserPage>}/>
-          </Routes>
+      <UserContext.Provider value={{ userData, setUserData }}>
+        <SearchContext.Provider value={{ searchData, setSearchData }}>
           <div>
             <ToastContainer
               position="top-center"
-              autoClose={900}
+              autoClose={500}
               hideProgressBar={true}
               newestOnTop={false}
               closeOnClick={true}
@@ -98,10 +91,28 @@ function App() {
               className="text-center"
             />
           </div>
-        </div>
-      </SearchContext.Provider>
-    </UserContext.Provider>
-    </UserLoadedContext.Provider> 
+          <div className="flex flex-col">
+            {/* Conditionally render AppHeader */}
+            {location.pathname === "/" ||
+            location.pathname === "/search" ||
+            location.pathname.startsWith("/event") ? (
+              <AppHeader />
+            ) : null}
+
+            <Routes>
+              <Route path="/" element={<AppBody />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/create-event" element={<CreateEventPage />} />
+              <Route path="/event/:eventID" element={<EventDetailsPage />} />
+              <Route path="/user" element={<UserPage />} />
+              <Route path="/edit-event" element={<EditEventPage />} />
+            </Routes>
+          </div>
+        </SearchContext.Provider>
+      </UserContext.Provider>
+    </UserLoadedContext.Provider>
   );
 }
 

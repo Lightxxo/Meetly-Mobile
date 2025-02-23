@@ -12,7 +12,6 @@ export default function SplashScreen() {
             src={backgroundImage}
             alt="Background"
             className="object-cover w-full h-full"
-            loading="lazy"
           />
         </div>
 

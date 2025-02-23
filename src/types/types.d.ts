@@ -1,8 +1,11 @@
 export type SearchDataType = {
-    text: string;
-    type: string;
-    timestamp: number | null;
-  };
+  text: string;
+  eventTypes: string[];
+  startTimestamp: string;
+  endTimestamp: string;
+  results?: any[];
+  loading?:boolean; 
+};
 
 export type UserDataType = {
   token : String,

@@ -8,10 +8,12 @@ export default (sequelize: Sequelize) => {
       eventTypeID: {
         type: DataTypes.UUID,
         allowNull: false,
+        primaryKey: true, 
       },
       eventID: {
         type: DataTypes.UUID,
         allowNull: false,
+        primaryKey: true, 
       },
     },
     {
@@ -21,6 +23,5 @@ export default (sequelize: Sequelize) => {
     }
   );
 
-  EventTypeOfEvent.removeAttribute('id');
   return EventTypeOfEvent;
 };

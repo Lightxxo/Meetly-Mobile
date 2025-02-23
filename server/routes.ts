@@ -12,7 +12,7 @@ router.post('/signup', controller.signupController);
 router.post('/login', controller.loginController);
 router.post('/user-token-verify', controller.userTokenVerifyController);
 router.post("/create-event", authMiddleware, upload.array("images", 10), controller.createEventController);
-router.get('/events', controller.getPaginatedEvents);
+router.get('/events', controller.getEvents);
 router.get('/event/:eventID', controller.getEventDetails);
 router.get('/rsvp-status', authMiddleware, controller.getUserRSVPStatus)
 router.post('/rsvp-status', authMiddleware, controller.postUserRSVPStatus)
@@ -23,4 +23,11 @@ router.get('/user', authMiddleware, controller.getUserEvents)
 router.get('/user/my', authMiddleware, controller.getMyEvents)
 router.get('/user/interested', authMiddleware, controller.getInterestedEvents)
 router.get('/user/attending', authMiddleware, controller.getAttendingEvents)
+router.get('/event-edit/:eventID', authMiddleware, controller.getEditEventDetails)
+router.put('/edit-event/:eventID', upload.array("newImages"), controller.updateEventController)
+router.delete('/delete-event/:eventID', authMiddleware, controller.deleteEventController);
+router.get("/search", controller.searchEvents);
+router.post("/sample-data", controller.insertSampleData)
+router.post("/sample-create", upload.array("images", 10), controller.createSampleEventController)
+
 export default router;  
