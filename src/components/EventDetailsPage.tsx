@@ -195,7 +195,7 @@ export default function EventDetailsPage() {
     const [updatedTime, setUpdatedTime] = useState(timeAgo(comment.createdAt));
   
     
-    const shouldUpdateTime = true;
+    const shouldUpdateTime = false;
   
     useEffect(() => {
       if (!shouldUpdateTime) return;
