@@ -1,13 +1,13 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { FaRedo } from "react-icons/fa";
 import { SearchContext } from "../contexts/Contexts";
 import EventListItem from "./EventListItem";
+import EventTypeInput from "./EventTypeInput";
 
 export default function SearchPage() {
   const { searchData, setSearchData } = useContext(SearchContext)!;
   const [searchParams, setSearchParams] = useSearchParams();
-  const [newEventType, setNewEventType] = useState("");
 
   useEffect(() => {
     const text = searchParams.get("text") || "";
@@ -47,33 +47,25 @@ export default function SearchPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Event Types Section */}
           <div className="w-full lg:border-r lg:border-gray-300 pr-8">
-            <label className="block mb-2 font-semibold text-gray-700">Event Types</label>
+            <label className="block mb-4 mt-3 font-semibold text-gray-700">
+              Event Types
+            </label>
             <div className="flex gap-2 mb-8">
-              <input
-                type="text"
-                value={newEventType}
-                onChange={(e) => setNewEventType(e.target.value)}
-                placeholder="Add event type"
-                className="p-3 w-full border border-gray-300 rounded-lg shadow-sm"
-              />
-              <button
-                onClick={() => {
-                  if (newEventType && !searchData.eventTypes.includes(newEventType)) {
+              <EventTypeInput
+                onAdd={(eventType: string) => {
+                  if (!searchData.eventTypes.includes(eventType)) {
                     setSearchData((prev) => ({
                       ...prev,
-                      eventTypes: [...prev.eventTypes, newEventType],
+                      eventTypes: [...prev.eventTypes, eventType],
                     }));
-                    setNewEventType("");
                   }
                 }}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg transition hover:bg-gray-700"
-              >
-                Add
-              </button>
+                existingEventTypes={searchData.eventTypes}
+              />
             </div>
             {/* Event Type Bubbles */}
             {searchData.eventTypes.length > 0 && (
-              <div className=" border-gray-300 border-t-2 pt-6 mt-4">
+              <div className="border-gray-300 border-t-2 pt-6 mt-4">
                 <div className="flex flex-wrap gap-2">
                   {searchData.eventTypes.map((type, index) => (
                     <div
@@ -101,7 +93,9 @@ export default function SearchPage() {
 
           {/* Timestamp Range Section */}
           <div className="w-full">
-            <label className="block mb-2 font-semibold text-gray-700">Timestamp Range</label>
+            <label className="block mb-2 font-semibold text-gray-700">
+              Timestamp Range
+            </label>
             <div className="flex gap-0 items-center">
               <div className="flex-1 mr-4">
                 <label className="block text-sm text-gray-600">Start Date</label>
@@ -131,7 +125,7 @@ export default function SearchPage() {
                   className="p-3 w-full border border-gray-300 rounded-lg shadow-sm"
                 />
               </div>
-              {/* Reset Button placed inside the Timestamp Range */}
+              {/* Reset Button */}
               <button
                 onClick={() =>
                   setSearchData((prev) => ({
@@ -151,11 +145,13 @@ export default function SearchPage() {
 
       {/* Display Search Results */}
       <div>
-        <h2 className="text-3xl font-semibold text-gray-800 mb-6">Search Results</h2>
+        <h2 className="text-3xl font-semibold text-gray-800 mb-6">
+          Search Results
+        </h2>
         {searchData.results && searchData.results.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {searchData.results.map((event, index) => (
-              <EventListItem event={event} key={index} flag={true}/>
+              <EventListItem event={event} key={index} flag={true} />
             ))}
           </div>
         ) : (

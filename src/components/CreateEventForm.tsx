@@ -1,6 +1,7 @@
 import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
+import EventTypeInput from "./EventTypeInput"; // Import the reusable component
 
 type FilePreview = {
   file: File;
@@ -15,7 +16,7 @@ const CreateEventForm: React.FC = () => {
   const [filePreviews, setFilePreviews] = useState<FilePreview[]>([]);
   const [thumbnailIndex, setThumbnailIndex] = useState(0);
   const [eventTypes, setEventTypes] = useState<string[]>([]);
-  const [eventTypeInput, setEventTypeInput] = useState("");
+  // Removed the separate eventTypeInput state
 
   // Handle file input changes (appending files)
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -57,21 +58,6 @@ const CreateEventForm: React.FC = () => {
     setThumbnailIndex(0);
   };
 
-  const handleAddEventType = () => {
-    const trimmedType = eventTypeInput.trim();
-    if (trimmedType !== "" && !eventTypes.includes(trimmedType)) {
-      setEventTypes([...eventTypes, trimmedType]);
-      setEventTypeInput("");
-    }
-  };
-
-  const handleEventTypeKeyDown = (e: any) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddEventType();
-    }
-  };
-
   const handleRemoveEventType = (typeToRemove: string) => {
     setEventTypes(eventTypes.filter((type) => type !== typeToRemove));
   };
@@ -80,13 +66,12 @@ const CreateEventForm: React.FC = () => {
     e.preventDefault();
 
     if (eventTypes.length === 0) {
-      toast("Please add at least one event type.")
-
+      toast("Please add at least one event type.");
       return;
     }
 
     if (filePreviews.length === 0) {
-      toast("Please upload at least one picture.")
+      toast("Please upload at least one picture.");
       return;
     }
 
@@ -115,16 +100,14 @@ const CreateEventForm: React.FC = () => {
       });
 
       if (response.ok) {
-        toast("Event created successfully!")
-
+        toast("Event created successfully!");
       } else {
         const errorData = await response.json();
-        toast(`Error: ${errorData.message || "Failed to create event"} ${response.status}`)
-
+        toast(`Error: ${errorData.message || "Failed to create event"} ${response.status}`);
       }
     } catch (error) {
       console.error("Submission error:", error);
-      toast("An error occurred while creating the event.")
+      toast("An error occurred while creating the event.");
     }
   };
 
@@ -185,21 +168,14 @@ const CreateEventForm: React.FC = () => {
         <label className="block text-sm font-medium text-gray-700">Event Types</label>
         <div className="mt-1">
           <div className="mt-2 flex">
-            <input
-              type="text"
-              value={eventTypeInput}
-              onChange={(e) => setEventTypeInput(e.target.value)}
-              onKeyDown={handleEventTypeKeyDown}
-              className="flex-grow border border-gray-300 rounded-l-md p-2"
-              placeholder="Enter event type and press Enter"
+            <EventTypeInput
+              onAdd={(eventType: string) => {
+                if (!eventTypes.includes(eventType)) {
+                  setEventTypes([...eventTypes, eventType]);
+                }
+              }}
+              existingEventTypes={eventTypes}
             />
-            <button
-              type="button"
-              onClick={handleAddEventType}
-              className="bg-gray-600 text-white px-4 hover:bg-gray-800 rounded-r-md"
-            >
-              Add
-            </button>
           </div>
           <div className="flex flex-wrap gap-2 mt-5 mb-5">
             {eventTypes.map((type, index) => (
@@ -257,9 +233,7 @@ const CreateEventForm: React.FC = () => {
                   type="button"
                   onClick={() => handleThumbnailSelect(index)}
                   className={`absolute top-1 left-1 bg-white rounded-full p-1 border ${
-                    thumbnailIndex === index
-                      ? "border-gray-500"
-                      : "border-gray-300"
+                    thumbnailIndex === index ? "border-gray-500" : "border-gray-300"
                   }`}
                   title="Select as thumbnail"
                 >

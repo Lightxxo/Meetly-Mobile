@@ -365,7 +365,7 @@ const fetchEventDetails = async (eventID: string) => {
 
         db.EventComment.findAll({
           where: { eventID },
-          attributes: ["commentID", "username", "userID", "rating", "comment"],
+          attributes: ["commentID", "username", "userID", "rating", "comment", "createdAt"],
         }),
       ]);
 
@@ -972,6 +972,32 @@ controller.deleteEventController = async (
   }
 };
 
+controller.getEventTypes = async (req: Request, res: Response) => {
+  try {
+    const { name } = req.query;
+
+    if (!name || typeof name !== 'string') {
+      res.status(400).json({ message: 'Invalid or missing query parameter: name' });
+      return 
+    }
+
+    const eventTypes = await db.EventType.findAll({
+      where: {
+        eventType: {
+          [Op.iLike]: `%${name}%`, // Case-insensitive search
+        },
+      },
+      attributes: ['eventType'], // Select only necessary fields
+      limit: 10, // Limit results for efficiency
+    });
+
+    res.json(eventTypes.map((v:any)=> v.eventType));
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
 controller.searchEvents = async (req: Request, res: Response) => {
   try {
     // Destructure query parameters (all optional except 'text')
@@ -1136,20 +1162,38 @@ const generateDeferredInteractionsForEvent = (
   eventID: string,
   users: string[],
   maxInteractions: number,
-  usernames: string[]
+  usernames: string[],
+  commentMin: number = 0,
+  commentMax: number = 1,
+  rsvpMin: number = 0,
+  rsvpMax: number = 0,
 ) => {
-  // Ensure we don't request more interactions than available users.
-  const randomUserCount = Math.min(Math.floor(Math.random() * maxInteractions) + 1, users.length);
   const allIndexes: number[] = Array.from({ length: users.length }, (_, i) => i);
-  const userIndexes = getRandomElements(allIndexes, randomUserCount);
+
+  // Generate a random number within the given range
+  const commentCount = Math.min(
+    Math.floor(Math.random() * (commentMax - commentMin + 1)) + commentMin,
+    users.length
+  );
+  const rsvpCount = Math.min(
+    Math.floor(Math.random() * (rsvpMax - rsvpMin + 1)) + rsvpMin,
+    users.length
+  );
+
+  // Pick unique user indexes for comments and RSVPs
+  const commentUserIndexes = getRandomElements(allIndexes, commentCount);
+  const rsvpUserIndexes = getRandomElements(allIndexes, rsvpCount);
+
   const commentRecords: any[] = [];
   const attendanceRecords: any[] = [];
-  for (const userIndex of userIndexes) {
-    const randomComment = randomData.randomEventComments[
-      Math.floor(Math.random() * randomData.randomEventComments.length)
-    ];
-    const statuses = ['Going', 'Interested', 'Not Going'];
-    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+
+  // Generate comments
+  for (const userIndex of commentUserIndexes) {
+    const randomComment =
+      randomData.randomEventComments[
+        Math.floor(Math.random() * randomData.randomEventComments.length)
+      ];
+
     commentRecords.push({
       eventID,
       userID: users[userIndex],
@@ -1157,14 +1201,26 @@ const generateDeferredInteractionsForEvent = (
       comment: randomComment,
       rating: 5,
     });
-    attendanceRecords.push({
-      eventID,
-      userID: users[userIndex],
-      status: randomStatus,
-    });
   }
+
+  // Generate RSVPs
+  if (rsvpMax > 0) {
+    const statuses = ['Going', 'Interested', 'Not Going'];
+
+    for (const userIndex of rsvpUserIndexes) {
+      const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+
+      attendanceRecords.push({
+        eventID,
+        userID: users[userIndex],
+        status: randomStatus,
+      });
+    }
+  }
+
   return { commentRecords, attendanceRecords };
 };
+
 
 const createSampleEvents = async (
   n: number,
@@ -1261,10 +1317,17 @@ const createSampleEvents = async (
       allCommentRecords.push(...commentRecords);
       allAttendanceRecords.push(...attendanceRecords);
     }
-    await Promise.all([
-      db.EventComment.bulkCreate(allCommentRecords),
-      db.EventAttendance.bulkCreate(allAttendanceRecords, { ignoreDuplicates: true })
-    ]);
+    const promises = [];
+
+    if (allCommentRecords.length > 0) {
+      promises.push(db.EventComment.bulkCreate(allCommentRecords));
+    }
+    
+    if (allAttendanceRecords.length > 0) {
+      promises.push(db.EventAttendance.bulkCreate(allAttendanceRecords, { ignoreDuplicates: true }));
+    }
+    
+    await Promise.all(promises);
     const elapsedTime = Date.now() - startTime;
     console.log(`Created ${n} sample events sequentially in ${formatDuration(elapsedTime)}.`);
   } catch (error) {
@@ -1314,12 +1377,12 @@ const createEventsDirectly = async (m: number, users: string[], usernames: strin
             ];
             const eventDate = new Date(Date.now() + Math.floor(Math.random() * 10000000000));
             const hostID = users[i % users.length];
-            const selectedImages = getRandomElements(imageFiles, Math.floor(Math.random() * 5) + 1);
+            const selectedImages = getRandomElements(imageFiles, Math.floor(Math.random() * 3) + 1);
             const imageUrls = selectedImages.map((file) => `${BASE_URL}/uploads/events/${file}`);
             const thumbnail = imageUrls[0] || '';
             return {
               eventData: { hostID, eventTitle: uniqueEventTitle, description: eventDescription, location: eventLocation, eventDate, thumbnail },
-              meta: { selectedImages: imageUrls, eventTypes: getRandomElements(randomData.randomEventTypes, Math.floor(Math.random()*randomData.randomEventTypes.length)) }
+              meta: { selectedImages: imageUrls, eventTypes: getRandomElements(randomData.randomEventTypes, Math.floor(Math.random()*2 + 1)) }
             };
           })
         );
@@ -1363,10 +1426,17 @@ const createEventsDirectly = async (m: number, users: string[], usernames: strin
         allCommentRecords.push(...commentRecords);
         allAttendanceRecords.push(...attendanceRecords);
       }
-      await Promise.all([
-        db.EventComment.bulkCreate(allCommentRecords),
-        db.EventAttendance.bulkCreate(allAttendanceRecords, { ignoreDuplicates: true })
-      ]);
+      const promises = [];
+
+      if (allCommentRecords.length > 0) {
+        promises.push(db.EventComment.bulkCreate(allCommentRecords));
+      }
+      
+      if (allAttendanceRecords.length > 0) {
+        promises.push(db.EventAttendance.bulkCreate(allAttendanceRecords, { ignoreDuplicates: true }));
+      }
+      
+      await Promise.all(promises);
       const batchElapsedTime = Date.now() - batchStartTime;
       // console.log(`Direct events batch ${batchStart} to ${batchEnd} processed in ${formatDuration(batchElapsedTime)}.`);
     }

@@ -192,10 +192,23 @@ export default function EventDetailsPage() {
   function Comment({ comment }: any) {
     const [isEditing, setIsEditing] = useState(false);
     const [editedComment, setEditedComment] = useState(comment.comment);
-
+    const [updatedTime, setUpdatedTime] = useState(timeAgo(comment.createdAt));
+  
+    
+    const shouldUpdateTime = true;
+  
+    useEffect(() => {
+      if (!shouldUpdateTime) return;
+  
+      const interval = setInterval(() => {
+        setUpdatedTime(timeAgo(comment.createdAt));
+      }, 1000);
+  
+      return () => clearInterval(interval);
+    }, [comment.createdAt, shouldUpdateTime]);
+  
     async function handleCommentDelete() {
       const token = Cookies.get("user");
-      console.log("DELETEEE TOKEN", token);
       const response = await fetch(`http://localhost:3000/delete-comment`, {
         method: "DELETE",
         headers: {
@@ -208,7 +221,7 @@ export default function EventDetailsPage() {
           commentID: comment.commentID,
         }),
       });
-
+  
       if (response.ok) {
         console.log("comment deleted successfully");
         setDetails((oldDetails: any) => ({
@@ -219,19 +232,17 @@ export default function EventDetailsPage() {
         }));
       }
     }
-
+  
     async function handleCommentEdit() {
       setIsEditing(true);
     }
-
+  
     async function handleUpdateComment() {
       if (editedComment.trim() === "") {
-        // If the comment is empty, trigger delete
         await handleCommentDelete();
       } else {
-        // Otherwise, update the comment
         const token = Cookies.get("user");
-
+  
         const response = await fetch(`http://localhost:3000/update-comment`, {
           method: "PUT",
           headers: {
@@ -245,7 +256,7 @@ export default function EventDetailsPage() {
             comment: editedComment,
           }),
         });
-
+  
         if (response.ok) {
           console.log("Comment updated successfully");
           setIsEditing(false);
@@ -260,31 +271,54 @@ export default function EventDetailsPage() {
         }
       }
     }
-
+  
+    function timeAgo(timestamp: string) {
+      const diff = Date.now() - new Date(timestamp).getTime();
+      const units = [
+        { label: "year", value: 365 * 24 * 60 * 60 * 1000 },
+        { label: "month", value: 30 * 24 * 60 * 60 * 1000 },
+        { label: "week", value: 7 * 24 * 60 * 60 * 1000 },
+        { label: "day", value: 24 * 60 * 60 * 1000 },
+        { label: "hour", value: 60 * 60 * 1000 },
+        { label: "minute", value: 60 * 1000 },
+        { label: "second", value: 1000 },
+      ];
+  
+      for (let { label, value } of units) {
+        const time = Math.floor(diff / value);
+        if (time > 0) {
+          return `${time} ${label}${time > 1 ? "s" : ""} ago`;
+        }
+      }
+      return "Just now";
+    }
+  
     return (
       <div className="relative mb-4 p-4 bg-gray-100 rounded-lg flex flex-row items-start">
-        {/* Avatar and Username Section */}
-        <div className="flex items-center space-x-2">
-          <AttendeeAvatar username={comment.username} size={8} />
-          <span className="font-semibold text-gray-800">
-            @{comment.username.toLowerCase()}:
-          </span>
+        <div className="flex flex-row items-start mt-2 mb-10">
+          {/* Avatar and Username Section */}
+          <div className="flex items-center space-x-2">
+            <AttendeeAvatar username={comment.username} size={8} />
+            <span className="font-semibold text-gray-800">
+              @{comment.username.toLowerCase()}:
+            </span>
+          </div>
+  
+          {/* Comment Text Section */}
+          {isEditing ? (
+            <textarea
+              value={editedComment}
+              onChange={(e) => setEditedComment(e.target.value)}
+              className="text-gray-600 mt-3 ml-2 border rounded p-3 w-full"
+            />
+          ) : (
+            <p className="text-gray-600 mt-1 ml-2">{comment.comment}</p>
+          )}
         </div>
-
-        {/* Comment Text Section */}
-        {isEditing ? (
-          <textarea
-            value={editedComment}
-            onChange={(e) => setEditedComment(e.target.value)}
-            className="text-gray-600 mt-3 ml-2 border rounded p-2 w-full"
-          />
-        ) : (
-          <p className="text-gray-600 mt-1 ml-2">{comment.comment}</p>
-        )}
-
+  
         {/* Edit and Delete Icons */}
         {userData.userID === comment.userID && (
-          <div className="absolute top-2 right-2 flex space-x-2">
+          <div className="absolute top-3 right-3 flex space-x-2">
             {isEditing ? (
               <button
                 aria-label="Save Comment"
@@ -311,6 +345,10 @@ export default function EventDetailsPage() {
             </button>
           </div>
         )}
+  
+        <div className="absolute bottom-3 right-3 flex space-x-2 text-xs">
+          {updatedTime}
+        </div>
       </div>
     );
   }

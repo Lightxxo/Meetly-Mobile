@@ -29,5 +29,6 @@ router.delete('/delete-event/:eventID', authMiddleware, controller.deleteEventCo
 router.get("/search", controller.searchEvents);
 router.post("/sample-data", controller.insertSampleData)
 router.post("/sample-create", upload.array("images", 10), controller.createSampleEventController)
+router.get('/search-event-type', controller.getEventTypes)
 
 export default router;  

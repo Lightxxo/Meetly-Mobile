@@ -4,6 +4,7 @@ import { UserContext, UserLoadedContext } from "../contexts/Contexts";
 import Loading from "./Loading";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
+import EventTypeInput from "./EventTypeInput"; // Import the reusable component
 
 type ImageItem = {
   id: string;
@@ -19,39 +20,40 @@ export default function EditEventPage() {
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // form fields 
+  // Form fields
   const [eventTitle, setEventTitle] = useState("");
   const [description, setDescription] = useState("");
   const [locationField, setLocationField] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [eventTypes, setEventTypes] = useState<string[]>([]);
-  const [eventTypeInput, setEventTypeInput] = useState("");
+  // Removed the separate eventTypeInput state since we're using EventTypeInput
+  // const [eventTypeInput, setEventTypeInput] = useState("");
 
-  // unified images array state & thumbnail selection index
+  // Unified images array state & thumbnail selection index
   const [images, setImages] = useState<ImageItem[]>([]);
   const [thumbnailIndex, setThumbnailIndex] = useState<number>(0);
 
   const locationObj = useLocation();
   const eventObj = locationObj.state;
-  console.log("########### event obj " , eventObj)
+  console.log("########### event obj ", eventObj);
   const queryParams = new URLSearchParams(locationObj.search);
   const eventID = queryParams.get("eventID")!;
   const token = Cookies.get("user");
   const navigate = useNavigate();
-  
+
   if (eventObj === null) {
     toast("Unauthorized");
     Cookies.remove("user");
-      setUserData({
-        token: "",
-        userID: "",
-        username: "",
-        email: "",
-      });
-    navigate('/');
+    setUserData({
+      token: "",
+      userID: "",
+      username: "",
+      email: "",
+    });
+    navigate("/");
     return;
-}
-  
+  }
+
   useEffect(() => {
     const fetchEventDetails = async () => {
       try {
@@ -83,28 +85,28 @@ export default function EditEventPage() {
       }
     };
 
-
-
-    if (!token ||   eventObj.event.hostID !== userData.userID) {
+    if (!token || eventObj.event.hostID !== userData.userID) {
       toast("Unauthorized");
       Cookies.remove("user");
-        setUserData({
-          token: "",
-          userID: "",
-          username: "",
-          email: "",
-        });
-      navigate('/');
+      setUserData({
+        token: "",
+        userID: "",
+        username: "",
+        email: "",
+      });
+      navigate("/");
     } else {
-    //   fetchEventDetails();
-    console.log(eventObj)
-    setEventData(eventObj)
-    setLoading(false)
+      // fetchEventDetails();
+      console.log(eventObj);
+      setEventData(eventObj);
+      setLoading(false);
     }
   }, [eventID, token, navigate, setUserData, userData]);
 
+  useEffect(() => {
+    console.log("$$$$$", eventData);
+  }, [eventData]);
 
-  useEffect(()=>{console.log("$$$$$",eventData)}, [eventData])
   useEffect(() => {
     if (!loading && userLoaded && eventData) {
       if (userData.userID !== eventData.event.hostID) {
@@ -121,20 +123,19 @@ export default function EditEventPage() {
     }
   }, [loading, userLoaded, eventData, userData, navigate, setUserData]);
 
-  // prefill form fields and images after eventData is loaded
+  // Prefill form fields and images after eventData is loaded
   useEffect(() => {
-    
     if (eventData !== null) {
       setLoading(false);
     }
-    
+
     if (eventData && eventData.event) {
       const { event } = eventData;
       setEventTitle(event.eventTitle || "");
       setDescription(event.description || "");
       setLocationField(event.location || "");
 
-      // convert eventDate for datetime-local input
+      // Convert eventDate for datetime-local input
       const dateObj = new Date(event.eventDate);
       const localDateTime = new Date(
         dateObj.getTime() - dateObj.getTimezoneOffset() * 60000
@@ -143,32 +144,28 @@ export default function EditEventPage() {
         .slice(0, 16);
       setEventDate(localDateTime);
 
-      // prefill event types 
+      // Prefill event types
       if (eventData.eventTypes.length) {
         setEventTypes(eventData.eventTypes);
       }
 
-      // process existing images 
+      // Process existing images
       if (eventData.images && Array.isArray(eventData.images)) {
-        const existingImages: ImageItem[] = eventData.images.map(
-          (img: any) => ({
-            id: img.image, // using the image URL as the unique id
-            isExisting: true,
-            url: img.image,
-          })
-        );
+        const existingImages: ImageItem[] = eventData.images.map((img: any) => ({
+          id: img.image, // using the image URL as the unique id
+          isExisting: true,
+          url: img.image,
+        }));
         setImages(existingImages);
 
-        // set the thumbnailIndex to match the thumbnail URL from the event
-        const thumbIdx = existingImages.findIndex(
-          (img) => img.url === event.thumbnail
-        );
+        // Set the thumbnailIndex to match the thumbnail URL from the event
+        const thumbIdx = existingImages.findIndex((img) => img.url === event.thumbnail);
         setThumbnailIndex(thumbIdx >= 0 ? thumbIdx : 0);
       }
     }
   }, [eventData]);
 
-  // clean up object URLs for new images when component unmounts
+  // Clean up object URLs for new images when component unmounts
   useEffect(() => {
     return () => {
       images.forEach((img) => {
@@ -179,7 +176,7 @@ export default function EditEventPage() {
     };
   }, [images]);
 
-  // handle file input change for new images
+  // Handle file input change for new images
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles: ImageItem[] = Array.from(e.target.files).map((file) => ({
@@ -190,7 +187,7 @@ export default function EditEventPage() {
       }));
       setImages((prev) => {
         const updated = [...prev, ...newFiles];
-        // if there were no images before, set thumbnail to the first one.
+        // If there were no images before, set thumbnail to the first one.
         if (prev.length === 0 && updated.length > 0) {
           setThumbnailIndex(0);
         }
@@ -204,33 +201,18 @@ export default function EditEventPage() {
     setImages((prev) => {
       const index = prev.findIndex((img) => img.id === id);
       const updated = prev.filter((img) => img.id !== id);
-      // reset thumbnailIndex to 0 if the one deleting is the thumbnail
+      // Reset thumbnailIndex to 0 if the one deleting is the thumbnail
       if (index === thumbnailIndex) {
         setThumbnailIndex(0);
       } else if (index < thumbnailIndex) {
-        // adjust the thumbnail index if an earlier image was removed.
+        // Adjust the thumbnail index if an earlier image was removed.
         setThumbnailIndex((prevIdx) => Math.max(prevIdx - 1, 0));
       }
       return updated;
     });
   };
 
-  // Handlers for event types
-  const handleAddEventType = () => {
-    const trimmed = eventTypeInput.trim();
-    if (trimmed && !eventTypes.includes(trimmed)) {
-      setEventTypes([...eventTypes, trimmed]);
-      setEventTypeInput("");
-    }
-  };
-
-  const handleEventTypeKeyDown = (e: any) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddEventType();
-    }
-  };
-
+  // Handlers for event types are now managed by EventTypeInput
   const handleRemoveEventType = (type: string) => {
     setEventTypes((prev) => prev.filter((t) => t !== type));
   };
@@ -264,9 +246,7 @@ export default function EditEventPage() {
     formData.append("thumbnailIndex", thumbnailIndex.toString());
 
     // Separate existing images (by URL) and new images (File)
-    const existingImages = images
-      .filter((img) => img.isExisting)
-      .map((img) => img.url);
+    const existingImages = images.filter((img) => img.isExisting).map((img) => img.url);
     formData.append("existingImages", JSON.stringify(existingImages));
     images
       .filter((img) => !img.isExisting && img.file)
@@ -299,21 +279,19 @@ export default function EditEventPage() {
       toast("An error occurred while updating the event.");
     }
   };
+
   async function handleDelete() {
-    if (isDeleting) return; 
+    if (isDeleting) return;
 
     setIsDeleting(true);
     try {
-      const response = await fetch(
-        `http://localhost:3000/delete-event/${eventID}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`http://localhost:3000/delete-event/${eventID}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -347,30 +325,20 @@ export default function EditEventPage() {
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           <span className="ml-2 text-lg">Back</span>
         </button>
       </div>
 
-      <div className="text-4xl text-center mb-6 flex flex-row justify-center align-center ">
+      <div className="text-4xl text-center mb-6 flex flex-row justify-center items-center">
         ✎ |<p className="font-bold">&nbsp;Edit Event</p>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="max-w-lg mx-auto p-4 space-y-4 mt-6"
-      >
+      <form onSubmit={handleSubmit} className="max-w-lg mx-auto p-4 space-y-4 mt-6">
         {/* Event Title */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Event Title
-          </label>
+          <label className="block text-sm font-medium text-gray-700">Event Title</label>
           <input
             type="text"
             value={eventTitle}
@@ -383,9 +351,7 @@ export default function EditEventPage() {
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Description
-          </label>
+          <label className="block text-sm font-medium text-gray-700">Description</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -397,9 +363,7 @@ export default function EditEventPage() {
 
         {/* Location */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Location
-          </label>
+          <label className="block text-sm font-medium text-gray-700">Location</label>
           <input
             type="text"
             value={locationField}
@@ -412,9 +376,7 @@ export default function EditEventPage() {
 
         {/* Event Date */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Event Date
-          </label>
+          <label className="block text-sm font-medium text-gray-700">Event Date</label>
           <input
             type="datetime-local"
             value={eventDate}
@@ -426,26 +388,17 @@ export default function EditEventPage() {
 
         {/* Event Types */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Event Types
-          </label>
+          <label className="block text-sm font-medium text-gray-700">Event Types</label>
           <div className="mt-1">
             <div className="mt-2 flex">
-              <input
-                type="text"
-                value={eventTypeInput}
-                onChange={(e) => setEventTypeInput(e.target.value)}
-                onKeyDown={handleEventTypeKeyDown}
-                className="flex-grow border border-gray-300 rounded-l-md p-2"
-                placeholder="Enter event type and press Enter"
+              <EventTypeInput
+                onAdd={(eventType: string) => {
+                  if (!eventTypes.includes(eventType)) {
+                    setEventTypes([...eventTypes, eventType]);
+                  }
+                }}
+                existingEventTypes={eventTypes}
               />
-              <button
-                type="button"
-                onClick={handleAddEventType}
-                className="bg-gray-600 text-white px-4 hover:bg-gray-800 rounded-r-md"
-              >
-                Add
-              </button>
             </div>
             <div className="flex flex-wrap gap-2 mt-5 mb-5">
               {Array.isArray(eventTypes) && eventTypes.length > 0 ? (
@@ -466,9 +419,7 @@ export default function EditEventPage() {
                   </div>
                 ))
               ) : (
-                <p className="text-gray-500 text-sm italic">
-                  No event types added
-                </p>
+                <p className="text-gray-500 text-sm italic">No event types added</p>
               )}
             </div>
           </div>
@@ -506,16 +457,14 @@ export default function EditEventPage() {
                     src={img.url}
                     alt="Preview"
                     className="object-cover w-full max-w-full h-auto max-h-24 rounded-md m-2"
-                    style={{ maxWidth: "calc(100% - 1rem)" }} // Manually adjusting width to prevent overflow
+                    style={{ maxWidth: "calc(100% - 1rem)" }}
                   />
                   {/* Thumbnail selection button */}
                   <button
                     type="button"
                     onClick={() => handleThumbnailSelect(idx)}
                     className={`absolute top-4 left-4 bg-white rounded-full p-1 border hover:bg-zinc-100 ${
-                      idx === thumbnailIndex
-                        ? "border-gray-500"
-                        : "border-gray-300"
+                      idx === thumbnailIndex ? "border-gray-500" : "border-gray-300"
                     }`}
                     title="Select as thumbnail"
                   >
@@ -533,6 +482,7 @@ export default function EditEventPage() {
               ))}
             </div>
           )}
+
         </div>
 
         {/* Submit Button */}
@@ -544,17 +494,16 @@ export default function EditEventPage() {
             Update Event
           </button>
         </div>
-        
       </form>
 
-      <div className="flex flex-row justify-center item-center">
-          <button
-            onClick={handleDelete}
-            className="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-700 w-[480px]"
-          >
-            Delete Event
-          </button>
-        </div>
+      <div className="flex flex-row justify-center items-center">
+        <button
+          onClick={handleDelete}
+          className="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-700 w-[480px]"
+        >
+          Delete Event
+        </button>
+      </div>
     </div>
   );
 }

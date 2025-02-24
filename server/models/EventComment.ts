@@ -34,6 +34,10 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.TEXT,
         allowNull: false, 
       },
+      createdAt: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      }
     },
     {
       sequelize,
