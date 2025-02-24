@@ -10,6 +10,8 @@ import randomData from "./randomData";
 import fs from "fs"
 import { promises as fsPromises } from 'fs';
 import pLimit from 'p-limit';
+import pidusage from 'pidusage';
+import os from "os";
 
 
 dotenv.config();
@@ -1045,9 +1047,8 @@ controller.searchEvents = async (req: Request, res: Response) => {
 const aaa = 0
 
 
-// ───────────────────────────────
-// Type definition for RandomData
-// ───────────────────────────────
+// Assumed globals: randomData, db, BASE_URL, hashPassword, controller
+
 type RandomData = {
   randomUsernames: string[];
   randomEmails: string[];
@@ -1059,9 +1060,6 @@ type RandomData = {
   randomEventComments: string[];
 };
 
-// ───────────────────────────────
-// Helper: Format Duration from milliseconds to a human-readable string
-// ───────────────────────────────
 const formatDuration = (ms: number): string => {
   const totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
@@ -1074,30 +1072,27 @@ const formatDuration = (ms: number): string => {
   return result.trim();
 };
 
-// ───────────────────────────────
-// Helper: Generate a Unique Event Title
-// ───────────────────────────────
-const generateUniqueEventTitle = (
-  baseTitle: string,
-  batchId: number,
-  i: number
-): string => {
-  // Append batchId, index, current timestamp and a random number for extra uniqueness.
+const generateUniqueEventTitle = (baseTitle: string, batchId: number, i: number): string => {
   return `${baseTitle}-batch${batchId}-i${i}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 };
 
-// ───────────────────────────────
-// Optimized User Creation (Bulk & Concurrent)
-// ───────────────────────────────
-const createUsers = async (randomData: RandomData) => {
+const checkCpuUsage = async (): Promise<number> => {
+  try {
+    const stats = await pidusage(process.pid);
+    return stats.cpu / os.cpus().length;
+  } catch (error) {
+    console.error('Error checking CPU usage:', error);
+    return 0;
+  }
+};
+
+const createUsers = async () => {
   try {
     if (
       randomData.randomUsernames.length !== 20 ||
       randomData.randomEmails.length !== 20
     ) {
-      throw new Error(
-        'You must provide exactly 20 unique usernames and 20 unique emails'
-      );
+      throw new Error('You must provide exactly 20 unique usernames and 20 unique emails');
     }
     const hashedPassword = await hashPassword(randomData.Password);
     const userPromises = randomData.randomUsernames.map((username, index) =>
@@ -1118,13 +1113,7 @@ const createUsers = async (randomData: RandomData) => {
   }
 };
 
-// ───────────────────────────────
-// Asynchronous File Copy with Timestamp
-// ───────────────────────────────
-const saveImageWithTimestampAsync = async (
-  file: string,
-  destinationFolder: string
-): Promise<string> => {
+const saveImageWithTimestampAsync = async (file: string, destinationFolder: string): Promise<string> => {
   const fileExtension = path.extname(file);
   const timestamp = Date.now();
   const newFileName = `${timestamp}${fileExtension}`;
@@ -1134,66 +1123,53 @@ const saveImageWithTimestampAsync = async (
   return newFileName;
 };
 
-// ───────────────────────────────
-// Helper: Get Random Elements from an Array
-// ───────────────────────────────
-const getRandomElements = (array: string[], count: number): string[] => {
+const getRandomElements = (array: any[], count: number): any[] => {
   const shuffled = array.slice().sort(() => 0.5 - Math.random());
   return shuffled.slice(0, count);
 };
 
-// ───────────────────────────────
-// Deferred Execution of Post-Insert Interactions
-// (Simulated background processing via setImmediate)
-// ───────────────────────────────
-const executeAfterRandomEventCreate = async (
+/**
+ * Generates deferred interaction records (comments and attendances) for an event.
+ * Returns two arrays: one for event comments and one for event attendances.
+ */
+const generateDeferredInteractionsForEvent = (
   eventID: string,
   users: string[],
   maxInteractions: number,
   usernames: string[]
 ) => {
-  try {
-    const randomUserCount = Math.floor(Math.random() * maxInteractions) + 1;
-    const allIndexes: any = Array.from(Array(users.length).keys());
-    const userIndexes = getRandomElements(allIndexes, randomUserCount);
-    // Offload interactions asynchronously
-    setImmediate(async () => {
-      await Promise.all(
-        userIndexes.map(async (userIndex: any) => {
-          const randomComment =
-            randomData.randomEventComments[
-              Math.floor(Math.random() * randomData.randomEventComments.length)
-            ];
-          await db.EventComment.create({
-            eventID,
-            userID: users[userIndex],
-            username: usernames[userIndex],
-            comment: randomComment,
-            rating: 5,
-          });
-          const statuses = ['Going', 'Interested', 'Not Going'];
-          const randomStatus =
-            statuses[Math.floor(Math.random() * statuses.length)];
-          await db.EventAttendance.findOrCreate({
-            where: { eventID, userID: users[userIndex] },
-            defaults: { status: randomStatus },
-          });
-        })
-      );
+  // Ensure we don't request more interactions than available users.
+  const randomUserCount = Math.min(Math.floor(Math.random() * maxInteractions) + 1, users.length);
+  const allIndexes: number[] = Array.from({ length: users.length }, (_, i) => i);
+  const userIndexes = getRandomElements(allIndexes, randomUserCount);
+  const commentRecords: any[] = [];
+  const attendanceRecords: any[] = [];
+  for (const userIndex of userIndexes) {
+    const randomComment = randomData.randomEventComments[
+      Math.floor(Math.random() * randomData.randomEventComments.length)
+    ];
+    const statuses = ['Going', 'Interested', 'Not Going'];
+    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+    commentRecords.push({
+      eventID,
+      userID: users[userIndex],
+      username: usernames[userIndex],
+      comment: randomComment,
+      rating: 5,
     });
-  } catch (error) {
-    console.error('Error in executeAfterRandomEventCreate:', error);
+    attendanceRecords.push({
+      eventID,
+      userID: users[userIndex],
+      status: randomStatus,
+    });
   }
+  return { commentRecords, attendanceRecords };
 };
 
-// ───────────────────────────────
-// Optimized createSampleEvents (for n ~ 20): Sequential Processing
-// ───────────────────────────────
 const createSampleEvents = async (
-  n: number, // Number of events to create (e.g., 20)
-  randomData: RandomData,
+  n: number,
   users: string[],
-  maxInteractions: number, // Max interactions per event
+  maxInteractions: number,
   req: any,
   usernames: string[]
 ) => {
@@ -1204,8 +1180,6 @@ const createSampleEvents = async (
     const imageFiles = fs
       .readdirSync(sampleImagesFolder)
       .filter((file: string) => /\.(jpg|jpeg|png|gif)$/i.test(file));
-
-    // Pre-cache event type IDs to avoid duplicate queries
     const cachedEventTypes: { [key: string]: number } = {};
     for (const typeName of randomData.randomEventTypes) {
       if (!cachedEventTypes[typeName]) {
@@ -1216,37 +1190,28 @@ const createSampleEvents = async (
         cachedEventTypes[typeName] = eventType.eventTypeID;
       }
     }
-
     const eventsData: any[] = [];
     const eventsMeta: any[] = [];
     for (let i = 0; i < n; i++) {
-      const randomEventTitle =
-        randomData.randomEventTitle[
-          Math.floor(Math.random() * randomData.randomEventTitle.length)
-        ];
-      // For sequential processing, we use a fixed batchId (0)
+      const randomEventTitle = randomData.randomEventTitle[
+        Math.floor(Math.random() * randomData.randomEventTitle.length)
+      ];
       const uniqueEventTitle = generateUniqueEventTitle(randomEventTitle, 0, i);
-      const randomEventDescription =
-        randomData.randomEventDescriptions[
-          Math.floor(Math.random() * randomData.randomEventDescriptions.length)
-        ];
-      const randomEventLocation =
-        randomData.randomEventLocations[
-          Math.floor(Math.random() * randomData.randomEventLocations.length)
-        ];
-      const randomEventDate = new Date(
-        Date.now() + Math.floor(Math.random() * 10000000000)
-      );
-      // Copy 2–9 images sequentially
+      const randomEventDescription = randomData.randomEventDescriptions[
+        Math.floor(Math.random() * randomData.randomEventDescriptions.length)
+      ];
+      const randomEventLocation = randomData.randomEventLocations[
+        Math.floor(Math.random() * randomData.randomEventLocations.length)
+      ];
+      const randomEventDate = new Date(Date.now() + Math.floor(Math.random() * 10000000000));
       const numImagesToSelect = Math.floor(Math.random() * 8) + 2;
       const selectedImageFiles = getRandomElements(imageFiles, numImagesToSelect);
-      const savedImageUrls = await Promise.all(
-        selectedImageFiles.map((file) =>
-          saveImageWithTimestampAsync(file, destinationFolder).then(
-            (savedName) => `${BASE_URL}/uploads/events/${savedName}`
-          )
-        )
-      );
+      const savedImageUrls = [];
+      for (const file of selectedImageFiles) {
+        const savedName = await saveImageWithTimestampAsync(file, destinationFolder);
+        savedImageUrls.push(`${BASE_URL}/uploads/events/${savedName}`);
+      }
+
       const thumbnail = savedImageUrls[0] || "";
       eventsData.push({
         hostID: users[i % users.length],
@@ -1258,12 +1223,10 @@ const createSampleEvents = async (
       });
       eventsMeta.push({
         savedImageUrls,
-        eventTypes: randomData.randomEventTypes.slice(0, 2),
+        eventTypes: getRandomElements(randomData.randomEventTypes, Math.floor(Math.random()*randomData.randomEventTypes.length)),
       });
     }
-
-    const createdEvents = await db.Event.bulkCreate(eventsData, { returning: true });
-
+    const createdEvents:any = await db.Event.bulkCreate(eventsData, { returning: true });
     const eventImagesData: any[] = [];
     const eventTypesData: any[] = [];
     createdEvents.forEach((event: any, index: number) => {
@@ -1272,29 +1235,36 @@ const createSampleEvents = async (
         eventImagesData.push({ eventID: event.eventID, image: url });
       });
       meta.eventTypes.forEach((typeName: string) => {
-        eventTypesData.push({
-          eventID: event.eventID,
-          eventTypeID: cachedEventTypes[typeName],
-        });
+        eventTypesData.push({ eventID: event.eventID, eventTypeID: cachedEventTypes[typeName] });
       });
     });
-
     await Promise.all([
       db.EventImage.bulkCreate(eventImagesData),
       db.EventTypeOfEvent.bulkCreate(eventTypesData),
     ]);
-
     const attendanceData = createdEvents.map((event: any) => ({
       eventID: event.eventID,
       userID: event.hostID,
       status: 'Going',
     }));
     await db.EventAttendance.bulkCreate(attendanceData);
-
-    createdEvents.forEach((event: any) => {
-      executeAfterRandomEventCreate(event.eventID, users, maxInteractions, usernames);
-    });
-
+    // Generate deferred interaction records in bulk.
+    let allCommentRecords: any[] = [];
+    let allAttendanceRecords: any[] = [];
+    for (const event of createdEvents) {
+      const { commentRecords, attendanceRecords } = generateDeferredInteractionsForEvent(
+        event.eventID,
+        users,
+        maxInteractions,
+        usernames
+      );
+      allCommentRecords.push(...commentRecords);
+      allAttendanceRecords.push(...attendanceRecords);
+    }
+    await Promise.all([
+      db.EventComment.bulkCreate(allCommentRecords),
+      db.EventAttendance.bulkCreate(allAttendanceRecords, { ignoreDuplicates: true })
+    ]);
     const elapsedTime = Date.now() - startTime;
     console.log(`Created ${n} sample events sequentially in ${formatDuration(elapsedTime)}.`);
   } catch (error) {
@@ -1302,21 +1272,11 @@ const createSampleEvents = async (
   }
 };
 
-// ───────────────────────────────
-// Optimized createEventsDirectly: Batch Processing & Bulk Inserts with pLimit
-// ───────────────────────────────
-const createEventsDirectly = async (
-  m: number, // Number of events to create directly
-  randomData: RandomData,
-  users: string[],
-  usernames: string[]
-) => {
+const createEventsDirectly = async (m: number, users: string[], usernames: string[]) => {
   try {
     const imageFiles = fs
       .readdirSync('./uploads/events/')
       .filter((file: string) => /\.(jpg|jpeg|png|gif)$/i.test(file));
-
-    // Pre-cache event type IDs
     const cachedEventTypes: { [key: string]: number } = {};
     for (const typeName of randomData.randomEventTypes) {
       if (!cachedEventTypes[typeName]) {
@@ -1327,10 +1287,14 @@ const createEventsDirectly = async (
         cachedEventTypes[typeName] = eventType.eventTypeID;
       }
     }
-
     const BATCH_SIZE = 1000;
-    const limit = pLimit(50);
+    const limit = pLimit(5);
     for (let batchStart = 0; batchStart < m; batchStart += BATCH_SIZE) {
+      const cpuUsage = await checkCpuUsage();
+      if (cpuUsage > 80) {
+        console.log(`High CPU usage detected (${cpuUsage.toFixed(2)}%). Pausing for 10 seconds...`);
+        await new Promise((resolve) => setTimeout(resolve, 10000));
+      }
       const batchStartTime = Date.now();
       const batchEnd = Math.min(batchStart + BATCH_SIZE, m);
       const batchId = Math.floor(batchStart / BATCH_SIZE);
@@ -1338,44 +1302,24 @@ const createEventsDirectly = async (
       for (let i = batchStart; i < batchEnd; i++) {
         batchPromises.push(
           limit(async () => {
-            const randomEventTitle =
-              randomData.randomEventTitle[
-                Math.floor(Math.random() * randomData.randomEventTitle.length)
-              ];
+            const randomEventTitle = randomData.randomEventTitle[
+              Math.floor(Math.random() * randomData.randomEventTitle.length)
+            ];
             const uniqueEventTitle = generateUniqueEventTitle(randomEventTitle, batchId, i);
-            const eventDescription =
-              randomData.randomEventDescriptions[
-                Math.floor(Math.random() * randomData.randomEventDescriptions.length)
-              ];
-            const eventLocation =
-              randomData.randomEventLocations[
-                Math.floor(Math.random() * randomData.randomEventLocations.length)
-              ];
-            const eventDate = new Date(
-              Date.now() + Math.floor(Math.random() * 10000000000)
-            );
+            const eventDescription = randomData.randomEventDescriptions[
+              Math.floor(Math.random() * randomData.randomEventDescriptions.length)
+            ];
+            const eventLocation = randomData.randomEventLocations[
+              Math.floor(Math.random() * randomData.randomEventLocations.length)
+            ];
+            const eventDate = new Date(Date.now() + Math.floor(Math.random() * 10000000000));
             const hostID = users[i % users.length];
-            const selectedImages = getRandomElements(
-              imageFiles,
-              Math.floor(Math.random() * 5) + 1
-            );
-            const imageUrls = selectedImages.map(
-              (file) => `${BASE_URL}/uploads/events/${file}`
-            );
+            const selectedImages = getRandomElements(imageFiles, Math.floor(Math.random() * 5) + 1);
+            const imageUrls = selectedImages.map((file) => `${BASE_URL}/uploads/events/${file}`);
             const thumbnail = imageUrls[0] || '';
             return {
-              eventData: {
-                hostID,
-                eventTitle: uniqueEventTitle,
-                description: eventDescription,
-                location: eventLocation,
-                eventDate,
-                thumbnail,
-              },
-              meta: {
-                selectedImages: imageUrls,
-                eventTypes: randomData.randomEventTypes.slice(0, 4),
-              },
+              eventData: { hostID, eventTitle: uniqueEventTitle, description: eventDescription, location: eventLocation, eventDate, thumbnail },
+              meta: { selectedImages: imageUrls, eventTypes: getRandomElements(randomData.randomEventTypes, Math.floor(Math.random()*randomData.randomEventTypes.length)) }
             };
           })
         );
@@ -1383,14 +1327,9 @@ const createEventsDirectly = async (
       const batchResults = await Promise.all(batchPromises);
       const eventsData = batchResults.map((result) => result.eventData);
       const eventsMeta = batchResults.map((result) => result.meta);
-
-      const createdEvents = await db.sequelize.transaction(async (t) => {
-        return await db.Event.bulkCreate(eventsData, {
-          transaction: t,
-          returning: true,
-        });
+      const createdEvents:any = await db.sequelize.transaction(async (t) => {
+        return await db.Event.bulkCreate(eventsData, { transaction: t, returning: true });
       });
-
       const eventImagesData: any[] = [];
       const eventTypesData: any[] = [];
       createdEvents.forEach((event: any, index: number) => {
@@ -1399,61 +1338,75 @@ const createEventsDirectly = async (
           eventImagesData.push({ eventID: event.eventID, image: url });
         });
         meta.eventTypes.forEach((typeName: string) => {
-          eventTypesData.push({
-            eventID: event.eventID,
-            eventTypeID: cachedEventTypes[typeName],
-          });
+          eventTypesData.push({ eventID: event.eventID, eventTypeID: cachedEventTypes[typeName] });
         });
       });
-
       await Promise.all([
         db.EventImage.bulkCreate(eventImagesData),
         db.EventTypeOfEvent.bulkCreate(eventTypesData),
       ]);
-
       const attendanceData = createdEvents.map((event: any) => ({
         eventID: event.eventID,
         userID: event.hostID,
         status: 'Going',
       }));
       await db.EventAttendance.bulkCreate(attendanceData);
-
-      createdEvents.forEach((event: any) => {
-        executeAfterRandomEventCreate(event.eventID, users, m, usernames);
-      });
-
+      let allCommentRecords: any[] = [];
+      let allAttendanceRecords: any[] = [];
+      for (const event of createdEvents) {
+        const { commentRecords, attendanceRecords } = generateDeferredInteractionsForEvent(
+          event.eventID,
+          users,
+          m,
+          usernames
+        );
+        allCommentRecords.push(...commentRecords);
+        allAttendanceRecords.push(...attendanceRecords);
+      }
+      await Promise.all([
+        db.EventComment.bulkCreate(allCommentRecords),
+        db.EventAttendance.bulkCreate(allAttendanceRecords, { ignoreDuplicates: true })
+      ]);
       const batchElapsedTime = Date.now() - batchStartTime;
-      console.log(`Direct events batch ${batchStart} to ${batchEnd} processed in ${formatDuration(batchElapsedTime)}.`);
+      // console.log(`Direct events batch ${batchStart} to ${batchEnd} processed in ${formatDuration(batchElapsedTime)}.`);
     }
-    console.log(`Successfully created ${m} direct events.`);
+    // console.log(`Successfully created ${m} direct events.`);
   } catch (error) {
     console.error('Error in createEventsDirectly:', error);
   }
 };
 
-// ───────────────────────────────
-// Controller: insertSampleData
-// ───────────────────────────────
-controller.insertSampleData = async (req: any, res: Response) => {
-  try {
-    const { n, m } = req.body;
-    const { users, usernames } = await createUsers(randomData);
-    await createSampleEvents(n, randomData, users, m, req, usernames);
-    await createEventsDirectly(m, randomData, users, usernames);
-    res.json({ message: 'Created N Events Successfully' });
-  } catch (error: any) {
-    console.error('Error in insertSampleData:', error);
-    res.status(500).json({ error: 'Internal server error', message: error.message });
+controller.insertSampleData = async (req: any, res: any) => {
+  const { n, m } = req.body;
+  const { users, usernames } = await createUsers();
+  await createSampleEvents(n, users, m, req, usernames);
+  const numBatches = m / 1000;
+  let batchDurations: number[] = [];
+  console.log(`Starting event creation: ${numBatches} batches of 1000 events each.`);
+  const overallStart = Date.now();
+  for (let i = 0; i < numBatches; i++) {
+    const cpuUsage = await checkCpuUsage();
+    if (cpuUsage > 80) {
+      console.log(`High CPU usage detected (${cpuUsage.toFixed(2)}%). Pausing for 10 seconds...`);
+      await new Promise((resolve) => setTimeout(resolve, 10000));
+    }
+    const batchStart = Date.now();
+    console.log(`Starting batch ${i + 1}/${numBatches}...`);
+    await createEventsDirectly(1000, users, usernames);
+    const duration = (Date.now() - batchStart) / 1000;
+    batchDurations.push(duration);
+    console.log(`Batch ${i + 1} processed in ${duration.toFixed(2)} seconds.`);
+    const avgDuration = batchDurations.reduce((a, b) => a + b, 0) / batchDurations.length;
+    const remainingBatches = numBatches - (i + 1);
+    const estimatedRemainingTime = remainingBatches * avgDuration;
+    console.log(`ETA: ~${Math.ceil(estimatedRemainingTime)} seconds remaining.`);
   }
+  const totalDuration = (Date.now() - overallStart) / 1000;
+  console.log(`All batches completed in ${totalDuration.toFixed(2)} seconds.`);
+  res.json({ message: 'Created N Events Successfully' });
 };
 
-// ───────────────────────────────
-// Controller: createSampleEventController (Single Event via API)
-// ───────────────────────────────
-controller.createSampleEventController = async (
-  req: any,
-  res: Response
-): Promise<void> => {
+controller.createSampleEventController = async (req: any, res: any): Promise<void> => {
   try {
     console.log('----- createEventController invoked -----');
     const {
@@ -1473,16 +1426,11 @@ controller.createSampleEventController = async (
     if (!eventDate) errors.push('Event date is required.');
     let eventTypesArr: any;
     try {
-      eventTypesArr =
-        typeof eventTypes === 'string' ? JSON.parse(eventTypes) : eventTypes;
+      eventTypesArr = typeof eventTypes === 'string' ? JSON.parse(eventTypes) : eventTypes;
     } catch (e) {
       errors.push('Invalid format for event types.');
     }
-    if (
-      !eventTypesArr ||
-      !Array.isArray(eventTypesArr) ||
-      eventTypesArr.length === 0
-    ) {
+    if (!eventTypesArr || !Array.isArray(eventTypesArr) || eventTypesArr.length === 0) {
       errors.push('At least one event type is required.');
     }
     if (!files || files.length === 0) {
@@ -1500,11 +1448,8 @@ controller.createSampleEventController = async (
       res.status(400).json({ error: errors.join(', ') });
       return;
     }
-    // Generate unique title for the single event
     const uniqueEventTitle = `${eventTitle}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-    const imageUrls = files.map(
-      (file: any) => `${BASE_URL}/uploads/events/${file.filename}`
-    );
+    const imageUrls = files.map((file: any) => `${BASE_URL}/uploads/events/${file.filename}`);
     const newEvent: any = await db.Event.create({
       hostID: userID,
       eventTitle: uniqueEventTitle,
@@ -1514,9 +1459,7 @@ controller.createSampleEventController = async (
       thumbnail: imageUrls[parseInt(thumbnailIndex, 10)],
     });
     const eventID = newEvent.eventID;
-    await db.EventImage.bulkCreate(
-      imageUrls.map((url: string) => ({ eventID, image: url }))
-    );
+    await db.EventImage.bulkCreate(imageUrls.map((url: string) => ({ eventID, image: url })));
     const cachedEventTypes: { [key: string]: number } = {};
     for (const typeName of eventTypesArr) {
       if (!cachedEventTypes[typeName]) {
@@ -1537,18 +1480,13 @@ controller.createSampleEventController = async (
       userID: userID,
       status: 'Going',
     });
-    res
-      .status(201)
-      .json({ event: newEvent, message: 'Event created successfully!' });
+    res.status(201).json({ event: newEvent, message: 'Event created successfully!' });
     console.log('----- createEventController completed successfully -----');
   } catch (error: any) {
     console.error('Error in createEventController:', error);
     res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 };
-
-
-
 
 
 export default controller;

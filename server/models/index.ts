@@ -129,7 +129,7 @@ const syncDatabase = async () => {
 };
 
 // Example usage
-force = true; // Set to true to delete images and force the sync
+force = false; // Set to true to delete images and force the sync
 syncDatabase();
 
 

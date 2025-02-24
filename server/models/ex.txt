@@ -53,7 +53,6 @@ export default (sequelize: Sequelize) => {
 
   return Event;
 };
-
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export default (sequelize: Sequelize) => {
@@ -70,6 +69,7 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
         primaryKey: true,
+        
       },
       status: {
         type: DataTypes.ENUM('Going', 'Interested', 'Not Going'),
@@ -85,7 +85,6 @@ export default (sequelize: Sequelize) => {
   EventAttendance.removeAttribute('id');
   return EventAttendance;
 };
-
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export default (sequelize: Sequelize) => {
@@ -132,7 +131,6 @@ export default (sequelize: Sequelize) => {
 
   return EventComment;
 };
-
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export default (sequelize: Sequelize) => {
@@ -215,44 +213,6 @@ export default (sequelize: Sequelize) => {
 
   return EventTypeOfEvent;
 };
-
-import { DataTypes, Model, Sequelize } from 'sequelize';
-
-export default (sequelize: Sequelize) => {
-  class User extends Model {}
-
-  User.init(
-    {
-      userID: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        primaryKey: true,
-      },
-      username: {
-        type: DataTypes.STRING(50),
-        allowNull: false,
-        unique: true,
-      },
-      email: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
-        unique: true,
-      },
-      password: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
-      },
-    },
-    {
-      sequelize,
-      tableName: 'Users',
-      timestamps: false,
-    }
-  );
-
-  return User;
-};
-
 import { Sequelize } from "sequelize";
 import dotenv from "dotenv";
 import UserModel from "./User";
@@ -262,7 +222,8 @@ import EventCommentModel from "./EventComment";
 import EventAttendanceModel from "./EventAttendance";
 import EventImageModel from "./EventImage";
 import EventTypeOfEventModel from "./EventTypeOfEvent";
-
+const fs = require('fs');
+const path = require('path');
 dotenv.config();
 
 // ✅ Initialize Sequelize
@@ -274,6 +235,12 @@ const sequelize = new Sequelize({
   host: process.env.POSTGRESQL_HOST!,
   port: parseInt(process.env.POSTGRESQL_PORT!),
   logging: false,
+  pool: {
+    max: 80,         // Maximum number of connections in the pool
+    min: 0,          // Minimum number of connections in the pool
+    acquire: 300000000,  // Time in milliseconds before a connection is considered to be timed out
+    idle: 10000,     // Time in milliseconds before an unused connection is released
+  },
 });
 
 // ✅ Define Models
@@ -327,17 +294,43 @@ db.EventType.belongsToMany(db.Event, {
   onDelete: "NO ACTION",
 });
 
-// Fix: Explicitly Associate EventTypeOfEvent with Event & EventType
+// ✅ Fix: Explicitly Associate EventTypeOfEvent with Event & EventType
 db.Event.hasMany(db.EventTypeOfEvent, { foreignKey: "eventID", onDelete: "CASCADE" });
 db.EventTypeOfEvent.belongsTo(db.Event, { foreignKey: "eventID" });
 
 db.EventType.hasMany(db.EventTypeOfEvent, { foreignKey: "eventTypeID", onDelete: "CASCADE" });
 db.EventTypeOfEvent.belongsTo(db.EventType, { foreignKey: "eventTypeID" });
 
-// ✅ Sync Database & Add Index
+
+
+// Define the global force variable
+let force = false; // Set to true when needed
+
 const syncDatabase = async () => {
   try {
-    await sequelize.sync({ alter: true });
+    // If force is true, delete all images in ./uploads/events/
+    if (force) {
+      const directoryPath = path.join(__dirname, '../uploads/events/');
+
+      // Check if the directory exists
+      if (fs.existsSync(directoryPath)) {
+        const files = fs.readdirSync(directoryPath);
+
+        // Delete all files in the directory
+        files.forEach((file:any) => {
+          const filePath = path.join(directoryPath, file);
+          if (fs.lstatSync(filePath).isFile()) {
+            fs.unlinkSync(filePath); // Delete file
+            console.log(`Deleted ${file}`);
+          }
+        });
+      } else {
+        console.log('Directory does not exist.');
+      }
+    }
+
+    // Synchronize the database, passing the global force variable
+    await sequelize.sync({ alter: true, force });
 
     // Ensure createdAt index exists
     await sequelize.query(
@@ -350,7 +343,45 @@ const syncDatabase = async () => {
   }
 };
 
-// Start the synchronization
+// Example usage
+force = false; // Set to true to delete images and force the sync
 syncDatabase();
 
+
 export default db;
+import { DataTypes, Model, Sequelize } from 'sequelize';
+
+export default (sequelize: Sequelize) => {
+  class User extends Model {}
+
+  User.init(
+    {
+      userID: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      username: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+        unique: true,
+      },
+      email: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+        unique: true,
+      },
+      password: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+      },
+    },
+    {
+      sequelize,
+      tableName: 'Users',
+      timestamps: false,
+    }
+  );
+
+  return User;
+};
