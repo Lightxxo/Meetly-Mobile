@@ -1,14 +1,19 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { FaRedo } from "react-icons/fa";
 import { SearchContext } from "../contexts/Contexts";
 import EventListItem from "./EventListItem";
 import EventTypeInput from "./EventTypeInput";
+import Loading from "./Loading"; // Your Loading component
 
 export default function SearchPage() {
   const { searchData, setSearchData } = useContext(SearchContext)!;
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isSearching, setIsSearching] = useState(false);
+  const debounceDelay = 500; // milliseconds
+  let debounceTimer: NodeJS.Timeout;
 
+  // Initialize search data from URL params on mount
   useEffect(() => {
     const text = searchParams.get("text") || "";
     const typesParam = searchParams.get("types") || "";
@@ -24,8 +29,10 @@ export default function SearchPage() {
       startTimestamp: start,
       endTimestamp: end,
     }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Update URL when searchData changes
   useEffect(() => {
     const params: Record<string, string> = {};
     if (searchData.text) params.text = searchData.text;
@@ -34,9 +41,48 @@ export default function SearchPage() {
     }
     if (searchData.startTimestamp) params.start = searchData.startTimestamp;
     if (searchData.endTimestamp) params.end = searchData.endTimestamp;
-
     setSearchParams(params);
   }, [searchData, setSearchParams]);
+
+  // Define the search function (e.g., an API call)
+  const performSearch = async () => {
+    // Simulate a search delay. Replace this with your actual API call.
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // When search completes, update your context with results.
+    // For example:
+    // const results = await fetchSearchResults(searchData);
+    // setSearchData((prev) => ({ ...prev, results }));
+  };
+
+  // Trigger debounced search whenever search criteria change
+  useEffect(() => {
+    // Only run search if there's a query to search for
+    if (
+      !searchData.text &&
+      (!searchData.eventTypes || searchData.eventTypes.length === 0) &&
+      !searchData.startTimestamp &&
+      !searchData.endTimestamp
+    ) {
+      return;
+    }
+
+    setIsSearching(true);
+
+    // Set a debounce timer
+    debounceTimer = setTimeout(async () => {
+      await performSearch();
+      setIsSearching(false);
+    }, debounceDelay);
+
+    // Clear timer if criteria change before debounceDelay
+    return () => clearTimeout(debounceTimer);
+    // Trigger on any change in these search criteria
+  }, [
+    searchData.text,
+    searchData.eventTypes,
+    searchData.startTimestamp,
+    searchData.endTimestamp,
+  ]);
 
   return (
     <div className="p-6 lg:p-12 xl:p-16 w-full max-w-full mx-auto">
@@ -63,7 +109,6 @@ export default function SearchPage() {
                 existingEventTypes={searchData.eventTypes}
               />
             </div>
-            {/* Event Type Bubbles */}
             {searchData.eventTypes.length > 0 && (
               <div className="border-gray-300 border-t-2 pt-6 mt-4">
                 <div className="flex flex-wrap gap-2">
@@ -125,7 +170,6 @@ export default function SearchPage() {
                   className="p-3 w-full border border-gray-300 rounded-lg shadow-sm"
                 />
               </div>
-              {/* Reset Button */}
               <button
                 onClick={() =>
                   setSearchData((prev) => ({
@@ -143,19 +187,20 @@ export default function SearchPage() {
         </div>
       </div>
 
-      {/* Display Search Results */}
+      {/* Search Results Section */}
       <div>
         <h2 className="text-3xl font-semibold text-gray-800 mb-6">
           Search Results
         </h2>
-        {searchData.results && searchData.results.length > 0 ? (
+        {isSearching && <Loading />}
+        {!isSearching && searchData.results && searchData.results.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {searchData.results.map((event, index) => (
               <EventListItem event={event} key={index} flag={true} />
             ))}
           </div>
         ) : (
-          <p className="text-gray-500">No results found</p>
+          !isSearching && <p className="text-gray-500">No results found</p>
         )}
       </div>
     </div>

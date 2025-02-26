@@ -556,6 +556,7 @@ export default function EventDetailsPage() {
                   <span
                     key={`${type}${index}`}
                     className="bg-gray-100 hover:bg-gray-200 text-white-600 text-sm font-medium px-3 py-1 rounded-full shadow-sm"
+                    onClick={()=>{navigate(`/search?types=${type}`)}}
                   >
                     {type}
                   </span>

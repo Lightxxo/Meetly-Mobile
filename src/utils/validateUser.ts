@@ -1,6 +1,6 @@
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
-
+//C_xY+1borKz=Eg_5mpFA
 export default async function validateUser(userData:any, setUserData:any, navigate:any, naviageTo:string|number, onFailNavigate:string|number = "", ifSuccessNavigateFlag:boolean = true ) {
     const token = Cookies.get("user")
     if ( token && userData.token.length) {

@@ -121,6 +121,10 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.TEXT,
         allowNull: false, 
       },
+      createdAt: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      }
     },
     {
       sequelize,
@@ -131,6 +135,7 @@ export default (sequelize: Sequelize) => {
 
   return EventComment;
 };
+
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export default (sequelize: Sequelize) => {

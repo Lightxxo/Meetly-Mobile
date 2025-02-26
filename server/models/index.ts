@@ -89,7 +89,7 @@ db.EventTypeOfEvent.belongsTo(db.EventType, { foreignKey: "eventTypeID" });
 
 
 // Define the global force variable
-let force = false; // Set to true when needed
+let force = false; // 
 
 const syncDatabase = async () => {
   try {
@@ -128,8 +128,8 @@ const syncDatabase = async () => {
   }
 };
 
-// Example usage
-force = true; // Set to true to delete images and force the sync
+
+force = false; 
 syncDatabase();
 
 

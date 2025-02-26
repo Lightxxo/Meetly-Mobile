@@ -14,7 +14,7 @@ const randomData = {
         "paul.adams@example.com", "victor.martin@example.com", "victoria.riley@example.com", 
         "linda.carter@example.com", "george.moore@example.com"
       ],
-    Password: 'randomPassword123',
+    Password: 'a',
     randomEventTitle: [
         "Tech Conference 2025", "Data Science Workshop", "AI Innovations Summit", "Frontend Development Bootcamp", "Annual Developer Meetup",
         "Blockchain for Beginners", "UX/UI Design Seminar", "Cybersecurity Trends", "Machine Learning Fundamentals", "Digital Marketing Workshop"
