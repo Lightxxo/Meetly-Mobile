@@ -12,6 +12,25 @@ import { promises as fsPromises } from 'fs';
 import pLimit from 'p-limit';
 import pidusage from 'pidusage';
 import os from "os";
+import { faker, tr } from '@faker-js/faker';
+
+const usedAdjectives = new Set();
+
+const getUniqueAdjective = () => {
+    if (usedAdjectives.size === 500) usedAdjectives.clear(); 
+    
+    let adjective;
+    do {
+        adjective = faker.word.adjective(); 
+    } while (usedAdjectives.has(adjective)); 
+
+    usedAdjectives.add(adjective); 
+    return adjective.charAt(0).toUpperCase() + adjective.slice(1);
+};
+
+
+
+
 
 
 dotenv.config();
@@ -1099,7 +1118,7 @@ const formatDuration = (ms: number): string => {
 };
 
 const generateUniqueEventTitle = (baseTitle: string, batchId: number, i: number): string => {
-  return `${baseTitle}-batch${batchId}-i${i}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  return `${baseTitle}-i${i}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 };
 
 const checkCpuUsage = async (): Promise<number> => {
@@ -1335,7 +1354,7 @@ const createSampleEvents = async (
   }
 };
 
-const createEventsDirectly = async (m: number, users: string[], usernames: string[]) => {
+const createEventsDirectly = async (m: number, users: string[], usernames: string[], minCom:number=0, maxCom:number=1, minRsvp:number=0, maxRsvp:number=0, minImg:number = 1, maxImg:number = 1, minType:number = 1, maxType:number= 2 , adj:boolean = false) => {
   try {
     const imageFiles = fs
       .readdirSync('./uploads/events/')
@@ -1368,7 +1387,14 @@ const createEventsDirectly = async (m: number, users: string[], usernames: strin
             const randomEventTitle = randomData.randomEventTitle[
               Math.floor(Math.random() * randomData.randomEventTitle.length)
             ];
-            const uniqueEventTitle = generateUniqueEventTitle(randomEventTitle, batchId, i);
+            let uniqueEventTitle;
+
+            if (adj){
+              uniqueEventTitle =  ` ${getUniqueAdjective()} `+ randomEventTitle ;
+            } else {
+              uniqueEventTitle = generateUniqueEventTitle(randomEventTitle, batchId, i);
+            }
+            
             const eventDescription = randomData.randomEventDescriptions[
               Math.floor(Math.random() * randomData.randomEventDescriptions.length)
             ];
@@ -1377,12 +1403,12 @@ const createEventsDirectly = async (m: number, users: string[], usernames: strin
             ];
             const eventDate = new Date(Date.now() + Math.floor(Math.random() * 10000000000));
             const hostID = users[i % users.length];
-            const selectedImages = getRandomElements(imageFiles, Math.floor(Math.random() * 1) + 1);
+            const selectedImages = getRandomElements(imageFiles, Math.floor(Math.random() * minImg) + maxImg);
             const imageUrls = selectedImages.map((file) => `${BASE_URL}/uploads/events/${file}`);
             const thumbnail = imageUrls[0] || '';
             return {
               eventData: { hostID, eventTitle: uniqueEventTitle, description: eventDescription, location: eventLocation, eventDate, thumbnail },
-              meta: { selectedImages: imageUrls, eventTypes: getRandomElements(randomData.randomEventTypes, Math.floor(Math.random()*2 + 1)) }
+              meta: { selectedImages: imageUrls, eventTypes: getRandomElements(randomData.randomEventTypes, Math.floor(Math.random()*maxType + minType)) }
             };
           })
         );
@@ -1421,7 +1447,11 @@ const createEventsDirectly = async (m: number, users: string[], usernames: strin
           event.eventID,
           users,
           m,
-          usernames
+          usernames,
+          minCom,
+          maxCom,
+          minRsvp,
+          maxRsvp
         );
         allCommentRecords.push(...commentRecords);
         allAttendanceRecords.push(...attendanceRecords);
@@ -1473,6 +1503,8 @@ controller.insertSampleData = async (req: any, res: any) => {
   }
   const totalDuration = (Date.now() - overallStart) / 1000;
   console.log(`All batches completed in ${totalDuration.toFixed(2)} seconds.`);
+  await createEventsDirectly(500, users, usernames, 10, 20, 10, 20, 3, 8, 4, 9, true);
+  console.log('Added 500 High volume data');
   res.json({ message: 'Created N Events Successfully' });
 };
 

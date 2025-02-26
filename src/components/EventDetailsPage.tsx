@@ -6,8 +6,9 @@ import { UserContext, UserLoadedContext } from "../contexts/Contexts";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import { FaEdit, FaTrashAlt, FaSave } from "react-icons/fa";
-import validateUser from "../utils/validateUser";
+// import validateUser from "../utils/validateUser";
 import ImageCard from "./ImageCard";
+import useConfirmDelete from "./useConfirmDelete";
 
 export default function EventDetailsPage() {
   const { eventID } = useParams<{ eventID: string }>();
@@ -19,6 +20,7 @@ export default function EventDetailsPage() {
   const userContext = useContext(UserContext);
   const { userLoaded } = useContext(UserLoadedContext)!;
   const navigate = useNavigate();
+  const { confirmDelete, modal } = useConfirmDelete();
 
   const [newComment, setNewComment] = useState<string>("");
   const token = Cookies.get("user");
@@ -239,7 +241,7 @@ export default function EventDetailsPage() {
   
     async function handleUpdateComment() {
       if (editedComment.trim() === "") {
-        await handleCommentDelete();
+        confirmDelete(handleCommentDelete)
       } else {
         const token = Cookies.get("user");
   
@@ -295,9 +297,10 @@ export default function EventDetailsPage() {
   
     return (
       <div className="relative mb-4 p-4 bg-gray-100 rounded-lg flex flex-row items-start">
-        <div className="flex flex-row items-start mt-2 mb-10">
+        <div className="flex flex-col items-start mt-2 mb-10">
+
           {/* Avatar and Username Section */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 mb-2">
             <AttendeeAvatar username={comment.username} size={8} />
             <span className="font-semibold text-gray-800">
               @{comment.username.toLowerCase()}:
@@ -339,7 +342,9 @@ export default function EventDetailsPage() {
             <button
               aria-label="Delete Comment"
               className="text-red-500 hover:text-red-700"
-              onClick={handleCommentDelete}
+              onClick={()=>{
+                confirmDelete(handleCommentDelete)
+              }}
             >
               <FaTrashAlt />
             </button>
@@ -703,6 +708,7 @@ export default function EventDetailsPage() {
           <MyComment></MyComment>
           <OthersComment></OthersComment>
         </div>
+        {modal}
       </div>
     </div>
   );

@@ -22,10 +22,28 @@ const Signup = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    function isFirstLetterAlphabet(str: string): boolean {
+      if (!str || str.length === 0) return false; 
+      const firstChar = str[0];
+      return /[A-Za-z]/.test(firstChar); 
+    }
+    
+
     if (password !== confirmPassword) {
         toast("Passwords do not match")
         return;
     }
+
+    if( password.length < 8){
+      toast("Password must be 8 characters long")
+      return;
+    }
+
+    if(!isFirstLetterAlphabet(username)){
+      toast("Username must start with an alphabet");
+      return;
+    }
+    
 
     // Handle signup logic (e.g., API call)
     const response = await fetch("http://localhost:3000/signup", {

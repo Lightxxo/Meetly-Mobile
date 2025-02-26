@@ -5,6 +5,7 @@ import Loading from "./Loading";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import EventTypeInput from "./EventTypeInput"; // Import the reusable component
+import useConfirmDelete from "./useConfirmDelete";
 
 type ImageItem = {
   id: string;
@@ -19,6 +20,7 @@ export default function EditEventPage() {
   const [eventData, setEventData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const { confirmDelete, modal } = useConfirmDelete();
 
   // Form fields
   const [eventTitle, setEventTitle] = useState("");
@@ -272,6 +274,8 @@ export default function EditEventPage() {
         // Optionally redirect or update the UI here
       } else {
         const errorData = await res.json();
+
+
         toast(`Error: ${errorData.message}`);
       }
     } catch (error) {
@@ -498,12 +502,15 @@ export default function EditEventPage() {
 
       <div className="flex flex-row justify-center items-center">
         <button
-          onClick={handleDelete}
+          onClick={()=>{
+            confirmDelete(handleDelete);
+          }}
           className="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-700 w-[480px]"
         >
           Delete Event
         </button>
       </div>
+      {modal}
     </div>
   );
 }

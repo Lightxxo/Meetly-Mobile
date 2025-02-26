@@ -21,10 +21,12 @@ const CreateEventForm: React.FC = () => {
   // Handle file input changes (appending files)
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles: FilePreview[] = Array.from(e.target.files).map((file) => ({
-        file,
-        preview: URL.createObjectURL(file),
-      }));
+      const newFiles: FilePreview[] = Array.from(e.target.files).map(
+        (file) => ({
+          file,
+          preview: URL.createObjectURL(file),
+        })
+      );
 
       setFilePreviews((prev) => {
         const updatedFiles = [...prev, ...newFiles];
@@ -103,7 +105,15 @@ const CreateEventForm: React.FC = () => {
         toast("Event created successfully!");
       } else {
         const errorData = await response.json();
-        toast(`Error: ${errorData.message || "Failed to create event"} ${response.status}`);
+        if (`${errorData.message}` === "Validation error") {
+          toast(`Event Title Already Exists!`);
+        } else {
+          toast(
+            `Error: ${errorData.message || "Failed to create event"} ${
+              response.status
+            }`
+          );
+        }
       }
     } catch (error) {
       console.error("Submission error:", error);
@@ -115,7 +125,9 @@ const CreateEventForm: React.FC = () => {
     <form onSubmit={handleSubmit} className="max-w-lg mx-auto p-4 space-y-4">
       {/* Event Title */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Event Title</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Event Title
+        </label>
         <input
           type="text"
           value={eventTitle}
@@ -128,7 +140,9 @@ const CreateEventForm: React.FC = () => {
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Description</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Description
+        </label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -140,7 +154,9 @@ const CreateEventForm: React.FC = () => {
 
       {/* Location */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Location</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Location
+        </label>
         <input
           type="text"
           value={location}
@@ -153,7 +169,9 @@ const CreateEventForm: React.FC = () => {
 
       {/* Event Date */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Event Date</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Event Date
+        </label>
         <input
           type="datetime-local"
           value={eventDate}
@@ -165,7 +183,9 @@ const CreateEventForm: React.FC = () => {
 
       {/* Event Types */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Event Types</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Event Types
+        </label>
         <div className="mt-1">
           <div className="mt-2 flex">
             <EventTypeInput
@@ -200,7 +220,9 @@ const CreateEventForm: React.FC = () => {
 
       {/* Picture Upload */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Upload Pictures</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Upload Pictures
+        </label>
         <div className="flex items-center space-x-2">
           <button
             type="button"
@@ -233,7 +255,9 @@ const CreateEventForm: React.FC = () => {
                   type="button"
                   onClick={() => handleThumbnailSelect(index)}
                   className={`absolute top-1 left-1 bg-white rounded-full p-1 border ${
-                    thumbnailIndex === index ? "border-gray-500" : "border-gray-300"
+                    thumbnailIndex === index
+                      ? "border-gray-500"
+                      : "border-gray-300"
                   }`}
                   title="Select as thumbnail"
                 >
