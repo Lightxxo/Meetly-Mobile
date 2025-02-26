@@ -1377,7 +1377,7 @@ const createEventsDirectly = async (m: number, users: string[], usernames: strin
             ];
             const eventDate = new Date(Date.now() + Math.floor(Math.random() * 10000000000));
             const hostID = users[i % users.length];
-            const selectedImages = getRandomElements(imageFiles, Math.floor(Math.random() * 3) + 1);
+            const selectedImages = getRandomElements(imageFiles, Math.floor(Math.random() * 1) + 1);
             const imageUrls = selectedImages.map((file) => `${BASE_URL}/uploads/events/${file}`);
             const thumbnail = imageUrls[0] || '';
             return {
