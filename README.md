@@ -68,9 +68,6 @@ Meetly/
 **Authentication:**  
 - **JWT (JSON Web Tokens)** 🔑 – Secure authentication and authorization.
 
-**Hosting:**  
-- **Render** ☁️ – Deployed on Render for scalability and performance.
-
 ---
 
 ## Setup and Installation ⚙️
