@@ -297,7 +297,7 @@ export default function EventDetailsPage() {
   
     return (
       <div className="relative mb-4 p-4 bg-gray-100 rounded-lg flex flex-row items-start">
-        <div className="flex flex-col items-start mt-2 mb-10">
+        <div className="flex flex-col items-start mt-2 mb-10 w-full">
 
           {/* Avatar and Username Section */}
           <div className="flex items-center space-x-2 mb-2">
@@ -609,7 +609,7 @@ export default function EventDetailsPage() {
                   Interested
                 </button>
                 <button
-                  className={`px-4 py-2 bg-stone-200 text-black font-semibold rounded-lg shadow-md hover:bg-stone-200 transition w-full sm:w-auto ${
+                  className={`px-4 py-2 bg-stone-200 text-black font-semibold rounded-lg shadow-md hover:bg-stone-400 transition w-full sm:w-auto ${
                     rsvp === "not going" && userData.token
                       ? "bg-zinc-900 hover:bg-zinc-700 text-white"
                       : ""

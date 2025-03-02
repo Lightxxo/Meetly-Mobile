@@ -6,7 +6,7 @@ const randomData = {
         "paulAdams", "victorMartin", "victoriaRiley", "lindaCarter", "georgeMoore"
       ],
       randomEmails: [
-        "john.doe92@example.com", "anna.smith@example.com", "mark.jones@example.com", 
+        "john@ex.com", "anna.smith@example.com", "mark.jones@example.com", 
         "lily.brown@example.com", "david.wilson@example.com", "susan.clark@example.com", 
         "michael.lee@example.com", "emily.miller@example.com", "chris.taylor@example.com", 
         "lucy.davis@example.com", "tommy.knight@example.com", "kelly.green@example.com", 
@@ -14,7 +14,7 @@ const randomData = {
         "paul.adams@example.com", "victor.martin@example.com", "victoria.riley@example.com", 
         "linda.carter@example.com", "george.moore@example.com"
       ],
-    Password: 'a',
+    Password: 'test',
     randomEventTitle: [
         "Tech Conference 2025", "Data Science Workshop", "AI Innovations Summit", "Frontend Development Bootcamp", "Annual Developer Meetup",
         "Blockchain for Beginners", "UX/UI Design Seminar", "Cybersecurity Trends", "Machine Learning Fundamentals", "Digital Marketing Workshop"

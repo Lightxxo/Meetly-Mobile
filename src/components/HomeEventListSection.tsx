@@ -66,7 +66,7 @@ export default function HomeEventListSection() {
         ))}
       </div>
 
-      {/* Invisible Loader for Infinite Scroll */}
+      {/* invisible Loader for Infinite Scroll */}
       <div ref={lastEventRef} className="h-10" />
 
       {loading && <Loading />}
