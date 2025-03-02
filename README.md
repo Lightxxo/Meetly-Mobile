@@ -38,21 +38,21 @@ Meetly is a full‐stack application inspired by Meetup.com, enabling users to c
 ---
 
 ## Project Structure 📂
-
-Meetly/  
-├── public/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# Static assets and HTML files  
-├── src/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# Frontend source code (React & Tailwind CSS)  
-├── server/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# Backend server code (Express.js & MongoDB)  
-│ &nbsp;&nbsp; ├── controllers/ &nbsp; # Controller files (including sample data logic)  
-│ &nbsp;&nbsp; ├── routes/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# Route definitions directing endpoints (e.g., /sample-data)  
-│ &nbsp;&nbsp; └── ... &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# Additional backend configuration files (ESLint, etc.)  
-├── .gitignore &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# Git ignore rules  
-├── README.md &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# This README file  
-├── package.json &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# Project metadata and scripts  
-├── tsconfig.json &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# TypeScript configuration  
-├── vite.config.ts &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# Vite configuration for development  
-└── ... &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# Other configuration files
-
+```text
+Meetly/
+├── public/          # Static assets and HTML files
+├── src/             # Frontend source code (React & Tailwind CSS)
+├── server/          # Backend server code (Express.js & MongoDB)
+│   ├── controllers/ # Controller files (including sample data logic)
+│   ├── routes/      # Route definitions directing endpoints (e.g., /sample-data)
+│   └── ...          # Additional backend configuration files (ESLint, etc.)
+├── .gitignore       # Git ignore rules
+├── README.md        # This README file
+├── package.json     # Project metadata and scripts
+├── tsconfig.json    # TypeScript configuration
+├── vite.config.ts   # Vite configuration for development
+└── ...              # Other configuration files
+```
 ---
 
 ## Tech Stack 🛠️
