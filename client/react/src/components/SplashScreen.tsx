@@ -1,5 +1,5 @@
 import CreateEventButton from "./CreateEventButton";
-import backgroundImage from "../../public/1.jpg"; 
+import backgroundImage from "../../src/assets/1.jpg"; 
 
 
 export default function SplashScreen() {
