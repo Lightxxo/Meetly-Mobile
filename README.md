@@ -146,7 +146,7 @@ Meetly includes a dedicated endpoint for populating the database with test data.
 
 - **Use Case:**  
   This endpoint is ideal for developers who need to verify application performance, test data integrity, or simulate heavy traffic scenarios in development or testing environments.  
-  **Note:** It is recommended to use this endpoint only in non‐production settings as massive data generation can significantly impact performance.
+**Note:** It is recommended to use this endpoint only in non‐production settings as massive data generation can significantly impact performance.
 
 ---
 
