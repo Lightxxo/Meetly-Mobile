@@ -42,7 +42,7 @@ export default function HomeEventListSection() {
     setLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:3000/events?limit=${limit}&offset=${offset}`
+        `http://192.168.1.185:3000/events?limit=${limit}&offset=${offset}`
       );
       const data = await response.json();
       setEvents((prevEvents) => [...prevEvents, ...data.events]);
@@ -100,12 +100,13 @@ const styles = StyleSheet.create({
     paddingVertical: verticalScale(24), // approximates py-6
   },
   headerContainer: {
+     
     marginBottom: verticalScale(36), // space below the header section
   },
   header: {
-    fontSize: scale(24), // adjust as needed
+    fontSize: scale(36), // adjust as needed
     fontWeight: "bold",
-    marginTop: verticalScale(48),
+    marginTop: verticalScale(105),
   },
   listContainer: {
     // Additional styling if needed.

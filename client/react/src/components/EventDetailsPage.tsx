@@ -458,8 +458,7 @@ export default function EventDetailsPage() {
   };
 
   function handleEditOnClick() {
-    const doesThisApiNeedCalling = 0;
-    // validateUser(userData, setUserData, navigate, `/edit-event?eventID=${eventID}`, '')
+
     navigate(`/edit-event?eventID=${eventID}`, { state: details });
   }
 

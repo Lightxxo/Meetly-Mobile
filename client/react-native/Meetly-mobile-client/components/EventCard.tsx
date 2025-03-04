@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, Image, StyleSheet } from "react-native";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
+import { scale } from "react-native-size-matters";
 
 interface EventCardProps {
   event: any;
@@ -9,6 +10,7 @@ interface EventCardProps {
 
 export default function EventCard({ event, flag = false }: EventCardProps) {
   const navigation = useNavigation<any>();
+  event.thumbnail = replaceLocalhost(event.thumbnail, "192.168.1.185")
 
   return (
     <Pressable
@@ -35,6 +37,11 @@ export default function EventCard({ event, flag = false }: EventCardProps) {
     </Pressable>
   );
 }
+
+function replaceLocalhost(thumbnail:string, ipAddress:string) {
+    if (!thumbnail || !ipAddress) return null;
+    return thumbnail.replace("localhost", ipAddress);
+    }
 
 const styles = StyleSheet.create({
   card: {
@@ -68,25 +75,26 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "bold",
-    paddingHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 4,
+    
+    paddingLeft: scale(12),
+    marginTop: 16,
+    marginBottom: 12,
   },
   date: {
     color: "#4B5563",
     fontSize: 14,
-    paddingHorizontal: 16,
+    paddingHorizontal: scale(16),
   },
   location: {
     color: "#374151",
     fontSize: 14,
-    paddingHorizontal: 16,
+    paddingHorizontal: scale(16),
     marginTop: 4,
   },
   description: {
     color: "#6B7280",
     fontSize: 14,
-    paddingHorizontal: 16,
+    paddingHorizontal: scale(16),
     marginTop: 8,
   },
 });
