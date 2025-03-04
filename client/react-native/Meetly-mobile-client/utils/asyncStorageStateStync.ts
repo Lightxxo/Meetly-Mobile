@@ -13,6 +13,9 @@ const asyncStorageStateSync = async (
       setUserData(parsedUserStorage);
       setUserLoaded({ loaded: true });
       console.log("SET USERDATA VIA SYNC");
+    } else {
+      setUserLoaded({ loaded: true });
+      console.log("NO USERDATA TO SYNC");
     }
   } catch (error) {
     console.error("Error retrieving user from AsyncStorage:", error);

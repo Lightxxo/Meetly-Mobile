@@ -306,8 +306,8 @@ controller.getEvents = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log("----- getPaginatedEvents invoked -----");
 
-    // Parse limit and offset from query params, default to 9 events per request
-    const limit = parseInt(req.query.limit as string) || 9;
+    // Parse limit and offset from query params, default to 10 events per request
+    const limit = parseInt(req.query.limit as string) || 10;
     const offset = parseInt(req.query.offset as string) || 0; // Defaults to 0 if not provided
 
     // Fetch events sorted by createdAt (newest first), with limit & offset
@@ -329,6 +329,7 @@ controller.getEvents = async (req: Request, res: Response): Promise<void> => {
       totalEvents,
       hasMore: offset + events.length < totalEvents,
     });
+    console.log("----- getPaginatedEvents completed successfully -----");
   } catch (error: any) {
     console.error("Error in getPaginatedEvents:", error);
     res

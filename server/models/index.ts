@@ -156,7 +156,7 @@ const syncDatabase = async () => {
   }
 };
 
-force = true;
+force = false;
 syncDatabase();
 
 export default db;

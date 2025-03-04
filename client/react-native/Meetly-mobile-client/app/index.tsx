@@ -1,17 +1,18 @@
-import { Link } from "expo-router";
-import { Text, View } from "react-native";
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import HomeEventListSection from '@/components/HomeEventListSection';
 
 export default function Index() {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-      <Link href="/example">Go to Example</Link>
+    <View style={styles.container}>
+      <HomeEventListSection />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+});
