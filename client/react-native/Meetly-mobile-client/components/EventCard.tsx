@@ -2,6 +2,8 @@ import React from "react";
 import { Pressable, Text, Image, StyleSheet } from "react-native";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { scale } from "react-native-size-matters";
+import replaceLocalhost from "@/utils/replaceLocalHost";
+import ipaddr from "@/utils/ipaddr";
 
 interface EventCardProps {
   event: any;
@@ -10,14 +12,14 @@ interface EventCardProps {
 
 export default function EventCard({ event, flag = false }: EventCardProps) {
   const navigation = useNavigation<any>();
-  event.thumbnail = replaceLocalhost(event.thumbnail, "192.168.1.185")
+  event.thumbnail = replaceLocalhost(event.thumbnail, ipaddr);
 
   return (
     <Pressable
       style={({ pressed }) => [
         styles.card,
         {
-          transform: [{ scale: pressed ? (!flag ? 1.05 : 1.01) : 1 }],
+          transform: [{ scale: pressed ? 1.1 : 1 }],
         },
         pressed && styles.pressed,
       ]}
@@ -38,11 +40,6 @@ export default function EventCard({ event, flag = false }: EventCardProps) {
   );
 }
 
-function replaceLocalhost(thumbnail:string, ipAddress:string) {
-    if (!thumbnail || !ipAddress) return null;
-    return thumbnail.replace("localhost", ipAddress);
-    }
-
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
@@ -62,20 +59,14 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
 
-  hoverScale: {
-    // For example, you could add a slight scale transform when not flagged
-  },
-  hoverScaleSmall: {
-    // A slightly different scale transform if flag is true
-  },
   thumbnail: {
     width: "100%",
-    height: 192, // Example height (32px * 6); adjust as needed or use scaling utilities
+    height: 192, //  height (32px * 6);
   },
   title: {
     fontSize: 18,
     fontWeight: "bold",
-    
+
     paddingLeft: scale(12),
     marginTop: 16,
     marginBottom: 12,
