@@ -6,12 +6,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { scale, verticalScale, moderateScale } from "react-native-size-matters";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window"); // Get screen width
+const { width: SCREEN_WIDTH } = Dimensions.get("window"); 
 
 export default function Navbar() {
     const [menuVisible, setMenuVisible] = useState(false);
-    const slideAnim = useRef(new Animated.Value(SCREEN_WIDTH * 0.7)).current; // Start off-screen (right side)
-    const searchBarFlex = useRef(new Animated.Value(1)).current; // Start with full flex (1 = 100%)
+    const slideAnim = useRef(new Animated.Value(SCREEN_WIDTH * 0.7)).current;
+    const searchBarFlex = useRef(new Animated.Value(1)).current;
 
     // Toggle menu visibility with smooth animation
     const toggleMenu = () => {
@@ -20,7 +20,7 @@ export default function Navbar() {
 
         // Slide in or out animation for the menu
         Animated.timing(slideAnim, {
-            toValue: newState ? 0 : SCREEN_WIDTH * 0.7, // Slide in or out
+            toValue: newState ? 0 : SCREEN_WIDTH * 0.7, 
             duration: 300,
             easing: Easing.ease,
             useNativeDriver: true,
@@ -28,10 +28,10 @@ export default function Navbar() {
 
         // Animate search bar flex (smaller when menu is open)
         Animated.timing(searchBarFlex, {
-            toValue: newState ? 0.6 : 1, // 60% flex when menu opens, 100% when closed
+            toValue: newState ? 0.6 : 1,
             duration: 300,
             easing: Easing.ease,
-            useNativeDriver: false, // Use native driver only for transforms and opacity
+            useNativeDriver: false,
         }).start();
     };
 
@@ -78,7 +78,7 @@ export default function Navbar() {
                 <Text style={styles.searchText}>Search For Event Title or Event Venue...</Text>
             </Animated.View>
 
-            {/* Menu Button (Toggles to Close "X" Icon) */}
+            
             <TouchableOpacity onPress={toggleMenu} style={styles.menuButton}>
                 <Ionicons name={menuVisible ? "close" : "menu"} size={moderateScale(24)} color="#111827" />
             </TouchableOpacity>
@@ -128,8 +128,8 @@ const styles = StyleSheet.create({
     menuContainer: {
         position: "absolute",
         top: 0,
-        right: 0, // Align menu to right
-        width: SCREEN_WIDTH * 0.7, // 70% of screen width for mobile
+        right: 0,
+        width: SCREEN_WIDTH * 0.7, 
         height: "1100%",
         backgroundColor: "#ffffff",
         paddingTop: verticalScale(60),
@@ -146,10 +146,10 @@ const styles = StyleSheet.create({
         zIndex: 1, 
     },
     menuItem: {
-        paddingVertical: verticalScale(12), // Reduced padding for mobile
+        paddingVertical: verticalScale(12), 
     },
     menuText: {
-        fontSize: moderateScale(14), // Smaller font size for mobile
+        fontSize: moderateScale(14),
         color: "#111827",
     },
     overlay: {
@@ -158,12 +158,12 @@ const styles = StyleSheet.create({
         left: 0,
         width: "100%",
         height: "100%",
-        zIndex: 0, // Ensure overlay is below menu
+        zIndex: 0, 
     },
     closeButton: {
         position: "absolute",
         top: verticalScale(10),
         right: scale(10),
-        zIndex: 2, // Ensure close button is above the menu
+        zIndex: 2, 
     },
 });
